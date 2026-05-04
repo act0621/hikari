@@ -782,9 +782,21 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
         </div>
         <span style="font-size:12px;color:var(--text-soft)" id="webSearchLabel">關閉</span>
       </div>
-      <div class="api-note" style="margin-top:.5rem">開啟後角色回信前會先搜尋最新資訊，輕語也會更貼近角色近況。</div>
+      <div class="api-note" style="margin-top:.5rem">開啟後角色回信前會先搜尋最新資訊。</div>
     </div>
   </div>
+
+  <div class="paper">
+    <div class="section-label">☁️ GitHub 雲端同步</div>
+    <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">填入後，所有資料會自動儲存到你的 GitHub，換裝置或重開瀏覽器都不會消失。</div>
+    <div class="setting-row"><div class="setting-label">GitHub Token</div><input class="setting-input" id="settingGhToken" type="password" placeholder="ghp_…"/><div class="api-note">Token 只存在瀏覽器本地，不會上傳到任何地方。</div></div>
+    <div style="display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap">
+      <button class="io-btn" onclick="syncToGitHub()">☁️ 立即儲存到 GitHub</button>
+      <button class="io-btn" onclick="syncFromGitHub()">🔄 從 GitHub 讀取資料</button>
+    </div>
+    <div style="font-size:12px;margin-top:.6rem" id="syncStatus"></div>
+  </div>
+
   <div class="paper">
     <div class="section-label">匯出 / 匯入資料</div>
     <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">匯出會下載一個 JSON 檔案，備份你的所有資料。匯入時選擇該檔案即可還原。</div>
@@ -927,10 +939,71 @@ function init(){
   setInterval(updateWorldState,30*60*1000);setInterval(checkLonging,60*60*1000);
 }
 
-function saveState(){try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}}
+// ── GitHub 雲端同步 ──
+const GH_OWNER='act0621';
+const GH_REPO='hikari';
+const GH_FILE='hikari-data.json';
+
+function getGhToken(){return document.getElementById('settingGhToken')?.value.trim()||'';}
+
+function setSyncStatus(msg,color='var(--text-soft)'){
+  const el=document.getElementById('syncStatus');
+  if(el){el.textContent=msg;el.style.color=color;}
+}
+
+async function syncToGitHub(){
+  const token=getGhToken();
+  if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
+  setSyncStatus('儲存中……');
+  try{
+    // 先取得現有檔案的 sha（更新需要）
+    let sha=null;
+    try{
+      const r=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+      if(r.ok){const d=await r.json();sha=d.sha;}
+    }catch(e){}
+
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    const body={message:'光：自動同步資料 '+new Date().toLocaleString('zh-TW'),content};
+    if(sha)body.sha=sha;
+
+    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{
+      method:'PUT',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    if(res.ok){setSyncStatus('✓ 已儲存到 GitHub · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');}
+    else{const err=await res.json();setSyncStatus('儲存失敗：'+err.message,'rgba(200,80,80,.7)');}
+  }catch(e){setSyncStatus('網路錯誤，請稍後再試','rgba(200,80,80,.7)');}
+}
+
+async function syncFromGitHub(){
+  const token=getGhToken();
+  if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
+  setSyncStatus('讀取中……');
+  try{
+    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+    if(!res.ok){setSyncStatus('找不到雲端資料，請先儲存一次','rgba(200,80,80,.7)');return;}
+    const d=await res.json();
+    const json=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))));
+    Object.assign(state,json);
+    saveState();
+    init();
+    setSyncStatus('✓ 已從 GitHub 讀取資料 · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');
+  }catch(e){setSyncStatus('讀取失敗：'+e.message,'rgba(200,80,80,.7)');}
+}
+
+// 每次 saveState 後自動同步到 GitHub（如果有 token）
+const _origSaveState=saveState;
+function saveState(){
+  try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}
+  // 非同步自動上傳，不阻塞操作
+  const token=getGhToken();
+  if(token)syncToGitHub().catch(()=>{});
+}
 function loadState(){try{const s=localStorage.getItem('hikari-v4');if(s)Object.assign(state,JSON.parse(s));}catch(e){}}
-function loadSettingsUI(){try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);['settingName','settingHobbies','settingAbout','settingApiKey'].forEach((id,i)=>{document.getElementById(id).value=[d.name,d.hobbies,d.about,d.apiKey][i]||'';});}}catch(e){}}
-function saveSettings(){const s={name:document.getElementById('settingName').value,hobbies:document.getElementById('settingHobbies').value,about:document.getElementById('settingAbout').value,apiKey:document.getElementById('settingApiKey').value};try{localStorage.setItem('hikari-settings',JSON.stringify(s));}catch(e){}const m=document.getElementById('saveMsg');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
+function loadSettingsUI(){try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);document.getElementById('settingName').value=d.name||'';document.getElementById('settingHobbies').value=d.hobbies||'';document.getElementById('settingAbout').value=d.about||'';document.getElementById('settingApiKey').value=d.apiKey||'';if(document.getElementById('settingGhToken'))document.getElementById('settingGhToken').value=d.ghToken||'';}}catch(e){}}
+function saveSettings(){const s={name:document.getElementById('settingName').value,hobbies:document.getElementById('settingHobbies').value,about:document.getElementById('settingAbout').value,apiKey:document.getElementById('settingApiKey').value,ghToken:document.getElementById('settingGhToken')?.value||''};try{localStorage.setItem('hikari-settings',JSON.stringify(s));}catch(e){}const m=document.getElementById('saveMsg');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
 function getApiKey(){return document.getElementById('settingApiKey').value.trim();}
 function getUserContext(){const n=document.getElementById('settingName').value.trim(),h=document.getElementById('settingHobbies').value.trim(),a=document.getElementById('settingAbout').value.trim();let c='';if(n)c+=`對方名字是${n}。`;if(h)c+=`興趣：${h}。`;if(a)c+=`關於她：${a}。`;return c;}
 function getCurrentChar(){return state.chars.find(c=>c.id===state.currentCharId);}
