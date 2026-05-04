@@ -688,6 +688,7 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   <div class="section-label">信件統計</div>
   <div class="stat-grid" id="statGrid"></div>
   <div class="paper" style="margin-bottom:1.5rem"><div class="section-label">本週最常提的情緒</div><div class="emotion-row" id="emotionRow"></div></div>
+  <button class="io-btn" style="margin-bottom:1.5rem;font-size:11px;color:rgba(200,80,80,.6);border-color:rgba(200,80,80,.2)" onclick="if(confirm('確定要重置所有統計數字嗎？'))resetStats()">重置統計數字</button>
 
   <div class="section-label">創作計時器</div>
   <div class="paper">
@@ -1089,7 +1090,7 @@ function loadWebSearch(){
 }
 
 async function callAPI(apiKey,system,messages,maxTokens=1000){
-  const bodyObj={model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system,messages};
+  const bodyObj={model:'claude-sonnet-4-6',max_tokens:maxTokens,system,messages};
   if(webSearchEnabled)bodyObj.tools=[{type:'web_search_20250305',name:'web_search'}];
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
@@ -1125,8 +1126,13 @@ async function sendReply(){
     catch(e){console.error('sendReply error:',e);reply='（信送出去了，但還沒有回音……）\n\n請確認：①金鑰是否正確 ②設定頁是否有按「儲存設定」';}
   }
   else{reply='請先在設定裡填入 API 金鑰。';}
-  aiText.textContent=reply;document.getElementById('letterBody').textContent=reply;document.getElementById('letterDate').textContent=formatDate(new Date());
-  state.lastLetterDate=new Date().toISOString();state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;
+  aiText.textContent=reply;
+  document.getElementById('letterBody').textContent=reply;
+  document.getElementById('letterDate').textContent=formatDate(new Date());
+  state.lastLetterDate=new Date().toISOString();
+  // 只有真正收到AI回覆才計入統計
+  const isRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
+  if(isRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   const pts=8+Math.floor(Math.random()*12)+(state.uploadedB64?Math.floor(Math.random()*6):0);
   const sentMsg=text||'（分享了一張畫）';
   gainAffection(pts);saveToInbox(char,reply,sentMsg,sentMsg);
@@ -1158,7 +1164,9 @@ async function sendDiary(){
   const apiKey=getApiKey();
   if(apiKey){try{reply=await callAPI(apiKey,char.prompt+'\n\n'+getUserContext()+(mCtx?'\n'+mCtx:''),[{role:'user',content}])||reply;}catch(e){reply='（信送出去了，但還沒有回音……）';}}
   else reply='請先在設定裡填入 API 金鑰。';
-  rt.textContent=reply;state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;
+  rt.textContent=reply;
+  const isDiaryRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
+  if(isDiaryRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   gainAffection(5+Math.floor(Math.random()*8));saveToInbox(char,reply,content.slice(0,40)+'……',content);state.lastLetterDate=new Date().toISOString();saveState();renderStats();
 }
 function renderMoodChart(){const chart=document.getElementById('moodChart'),dEl=document.getElementById('chartDays');chart.innerHTML='';dEl.innerHTML='';const char=getCurrentChar();const c1=char?.c1||'#a8edea',c2=char?.c2||'#fed6e3';Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));const key=d.toISOString().split('T')[0];const entry=state.moodHistory.slice().reverse().find(m=>m.date===key);const bar=document.createElement('div');bar.className='chart-bar';bar.style.height=((entry?.val||0)*16)+'px';bar.style.background=`linear-gradient(to top,${c1},${c2})`;bar.title=entry?entry.mood:'無記錄';chart.appendChild(bar);const label=document.createElement('div');label.className='chart-day';label.textContent=(d.getMonth()+1)+'/'+d.getDate();dEl.appendChild(label);});}
@@ -1277,6 +1285,7 @@ function openInboxDetail(idx){
 function closeInboxDetail(){document.getElementById('inboxDetail').classList.remove('show');if(gazeTimer){clearInterval(gazeTimer);gazeTimer=null;}openInboxIdx=null;}
 
 // ── 統計 ──
+function resetStats(){state.totalLetters=0;state.totalWords=0;saveState();renderStats();}
 function renderStats(){
   const grid=document.getElementById('statGrid');if(!grid)return;
   grid.innerHTML=`<div class="stat-card"><div class="stat-val">${state.totalLetters||0}</div><div class="stat-label">收到的信</div></div><div class="stat-card"><div class="stat-val">${state.totalWords||0}</div><div class="stat-label">累計字數</div></div><div class="stat-card"><div class="stat-val">${state.inbox?.length||0}</div><div class="stat-label">信件存檔</div></div><div class="stat-card"><div class="stat-val">${state.gallery?.length||0}</div><div class="stat-label">畫作上傳</div></div>`;
