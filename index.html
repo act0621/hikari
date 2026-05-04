@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>光</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✉</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════
@@ -369,6 +370,10 @@ body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--text-mai
 .save-btn:hover{background:rgba(140,128,118,.25);}
 .api-note{font-size:11px;color:var(--text-soft);line-height:1.8;border-left:2px solid rgba(160,148,136,.25);padding-left:10px;margin-top:.5rem;}
 .save-msg{font-size:12px;color:var(--text-soft);margin-top:.8rem;display:none;}
+.toggle-switch{width:40px;height:22px;border-radius:11px;background:rgba(160,148,136,.2);border:.5px solid var(--paper-border);cursor:pointer;position:relative;transition:background .25s ease;flex-shrink:0;}
+.toggle-switch.on{background:rgba(168,237,234,.4);border-color:rgba(168,237,234,.5);}
+.toggle-knob{width:16px;height:16px;border-radius:50%;background:#c8c0b8;position:absolute;top:2px;left:2px;transition:all .25s ease;}
+.toggle-switch.on .toggle-knob{left:20px;background:#5a9a94;}
 .io-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.8rem;}
 .io-btn{border-radius:8px;padding:8px 16px;border:.5px solid var(--paper-border);background:rgba(255,252,248,.7);font-family:'Noto Serif TC',serif;font-size:13px;color:var(--text-muted);cursor:pointer;transition:all .2s ease;}
 .io-btn:hover{background:rgba(255,252,248,1);color:#5a5248;}
@@ -710,6 +715,16 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   <div class="paper">
     <div class="section-label">API 金鑰</div>
     <div class="setting-row"><div class="setting-label">Anthropic API Key</div><input class="setting-input" id="settingApiKey" type="password" placeholder="sk-ant-…"/><div class="api-note">取得：console.anthropic.com → API Keys → Create Key<br>金鑰只存在瀏覽器本地。</div></div>
+    <div class="setting-row" style="margin-top:1rem">
+      <div class="setting-label">網路搜尋（需額外 $0.01 / 次）</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:.4rem">
+        <div class="toggle-switch" id="webSearchToggle" onclick="toggleWebSearch()">
+          <div class="toggle-knob" id="webSearchKnob"></div>
+        </div>
+        <span style="font-size:12px;color:var(--text-soft)" id="webSearchLabel">關閉</span>
+      </div>
+      <div class="api-note" style="margin-top:.5rem">開啟後角色回信前會先搜尋最新資訊，輕語也會更貼近角色近況。</div>
+    </div>
   </div>
   <div class="paper">
     <div class="section-label">匯出 / 匯入資料</div>
@@ -844,7 +859,7 @@ function init(){
   loadState();
   if(!state.chars||!state.chars.length)state.chars=JSON.parse(JSON.stringify(DEFAULT_CHARS));
   if(!state.currentCharId&&state.chars.length)state.currentCharId=state.chars[0].id;
-  setSeason();setDailyQuestion();setLetterDate();loadTheme();
+  setSeason();setDailyQuestion();setLetterDate();loadTheme();loadWebSearch();
   renderChars();applyCharTheme();updateAffBar();renderMoodChart();
   checkBirthday();checkLonging();buildNeonPresets();buildEmojiPicker();loadSettingsUI();
   renderWishes();renderQuotes();renderQuoteCharSel();renderInspo();renderDreams();
@@ -1003,7 +1018,21 @@ function playUnlockAnim(){const ov=document.getElementById('unlockAnimOverlay');
 function handleUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{state.uploadedB64=ev.target.result.split(',')[1];document.getElementById('preview').src=ev.target.result;document.getElementById('preview').style.display='block';document.getElementById('uploadLabel').style.display='none';addImageToGallery(ev.target.result);};r.readAsDataURL(file);}
 
 // ── API ──
+// ── 網路搜尋開關 ──
+let webSearchEnabled=false;
+function toggleWebSearch(){
+  webSearchEnabled=!webSearchEnabled;
+  document.getElementById('webSearchToggle')?.classList.toggle('on',webSearchEnabled);
+  const label=document.getElementById('webSearchLabel');if(label)label.textContent=webSearchEnabled?'開啟':'關閉';
+  try{localStorage.setItem('hikari-websearch',webSearchEnabled?'1':'0');}catch(e){}
+}
+function loadWebSearch(){
+  try{const v=localStorage.getItem('hikari-websearch');webSearchEnabled=v==='1';document.getElementById('webSearchToggle')?.classList.toggle('on',webSearchEnabled);const label=document.getElementById('webSearchLabel');if(label)label.textContent=webSearchEnabled?'開啟':'關閉';}catch(e){}
+}
+
 async function callAPI(apiKey,system,messages,maxTokens=1000){
+  const bodyObj={model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system,messages};
+  if(webSearchEnabled)bodyObj.tools=[{type:'web_search_20250305',name:'web_search'}];
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
@@ -1012,7 +1041,7 @@ async function callAPI(apiKey,system,messages,maxTokens=1000){
       'anthropic-version':'2023-06-01',
       'anthropic-dangerous-direct-browser-access':'true'
     },
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system,messages})
+    body:JSON.stringify(bodyObj)
   });
   if(!res.ok){const err=await res.json().catch(()=>({}));console.error('API error:',err);return null;}
   const data=await res.json();
@@ -1163,10 +1192,16 @@ function renderSentInbox(){
 
 function deleteInboxItem(idx,e){
   if(e)e.stopPropagation();
+  const item=state.inbox[idx];
+  if(item){
+    state.totalLetters=Math.max(0,(state.totalLetters||0)-1);
+    state.totalWords=Math.max(0,(state.totalWords||0)-item.body.length);
+  }
   state.inbox.splice(idx,1);
   saveState();renderInboxSlider();
   if(inboxTab==='his')renderInbox();else renderSentInbox();
   if(openInboxIdx!==null)closeInboxDetail();
+  renderStats();
 }
 function openInboxDetail(idx){
   openInboxIdx=idx;const item=state.inbox[idx];
