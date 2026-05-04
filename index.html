@@ -28,32 +28,90 @@
 body.theme-dark{
   --bg:#0e0c10;
   --paper:rgba(255,253,249,0.05);
-  --paper-border:rgba(200,185,170,0.15);
+  --paper-border:rgba(200,185,170,0.18);
   --text-main:#e8e0d8;
-  --text-muted:#9a9088;
-  --text-soft:#6a6260;
-  --nav-bg:rgba(14,12,16,.85);
-  --input-bg:rgba(255,253,249,.04);
+  --text-muted:#c0b8b0;
+  --text-soft:#8a8280;
+  --nav-bg:rgba(14,12,16,.92);
+  --input-bg:rgba(255,253,249,.06);
   --shimmer-opacity:.07;
 }
-body.theme-dark .paper{background:rgba(28,22,34,.7);}
-body.theme-dark .char-card{background:rgba(255,253,249,.03);}
-body.theme-dark .char-card.active{background:rgba(255,253,249,.07);}
-body.theme-dark .daily-box,body.theme-dark .char-world,body.theme-dark .drift-bottle,body.theme-dark .quote-box{background:rgba(255,253,249,.03);}
-body.theme-dark .longing-banner{background:rgba(255,253,249,.04);}
-body.theme-dark .reply-area{background:rgba(255,253,249,.03);}
-body.theme-dark .inbox-slide-card{background:rgba(255,253,249,.04);}
-body.theme-dark .mood-btn{background:rgba(255,253,249,.03);}
-body.theme-dark .wish-input,body.theme-dark .setting-input,body.theme-dark .setting-textarea,body.theme-dark .modal-input,body.theme-dark .modal-textarea,body.theme-dark .relation-input{background:rgba(255,253,249,.05);color:var(--text-main);}
-body.theme-dark .timer-btn,body.theme-dark .timer-stat,body.theme-dark .io-btn,body.theme-dark .relation-btn,body.theme-dark .quote-char-sel{background:rgba(255,253,249,.04);color:var(--text-muted);}
-body.theme-dark .gallery-item,body.theme-dark .gallery-add{background:rgba(200,185,170,.06);}
-body.theme-dark .inbox-wall .inbox-card{background:rgba(255,253,249,.04);}
-body.theme-dark .aff-popup,body.theme-dark .unlock-box,body.theme-dark .inbox-detail-box,body.theme-dark .modal-box{background:rgba(20,16,24,.98);}
+body.theme-dark .paper{background:rgba(30,24,38,.78);border-color:rgba(200,185,170,.15);}
+body.theme-dark .char-card{background:rgba(255,253,249,.04);border-color:rgba(200,185,170,.12);}
+body.theme-dark .char-card.active{background:rgba(255,253,249,.09);border-color:rgba(200,185,170,.3);}
+body.theme-dark .char-name{color:#e8e0d8;}
+body.theme-dark .char-origin{color:#a09890;}
+body.theme-dark .daily-box,body.theme-dark .char-world,body.theme-dark .drift-bottle,body.theme-dark .quote-box{background:rgba(30,24,38,.65);border-color:rgba(200,185,170,.12);}
+body.theme-dark .daily-q,body.theme-dark .drift-req,body.theme-dark .quote-today-text{color:#d8d0c8;}
+body.theme-dark .char-world-val{color:#d0c8c0;}
+body.theme-dark .char-world-label,body.theme-dark .char-world-update{color:#6a6260;}
+body.theme-dark .drift-char{color:#7a7270;}
+body.theme-dark .longing-banner{background:rgba(30,24,38,.7);color:#c8c0b8;}
+body.theme-dark .reply-area{background:rgba(30,24,38,.6);border-color:rgba(200,185,170,.12);}
+body.theme-dark .reply-input{color:#e8e0d8;}
+body.theme-dark .reply-input::placeholder{color:#4a4248;}
+body.theme-dark .inbox-slide-card{background:rgba(30,24,38,.7);border-color:rgba(200,185,170,.12);}
+body.theme-dark .inbox-slide-preview{color:#8a8280;}
+body.theme-dark .inbox-slide-from{color:#6a6260;}
+body.theme-dark .mood-btn{background:rgba(255,253,249,.04);color:#a09890;border-color:rgba(200,185,170,.15);}
+body.theme-dark .mood-btn.selected{color:#e8e0d8;}
+body.theme-dark .wish-input,body.theme-dark .setting-input,body.theme-dark .setting-textarea,body.theme-dark .modal-input,body.theme-dark .modal-textarea,body.theme-dark .relation-input,body.theme-dark .quote-char-sel{background:rgba(255,253,249,.06);color:#e8e0d8;border-color:rgba(200,185,170,.15);}
+body.theme-dark .wish-input::placeholder,body.theme-dark .setting-input::placeholder,body.theme-dark .setting-textarea::placeholder,body.theme-dark .modal-input::placeholder,body.theme-dark .modal-textarea::placeholder{color:#4a4248;}
+body.theme-dark .wish-text{color:#d0c8c0;}
+body.theme-dark .wish-check{border-color:rgba(200,185,170,.25);}
+body.theme-dark .timer-btn,body.theme-dark .timer-stat,body.theme-dark .io-btn,body.theme-dark .relation-btn{background:rgba(255,253,249,.05);color:#a09890;border-color:rgba(200,185,170,.15);}
+body.theme-dark .timer-display,body.theme-dark .timer-stat-val,body.theme-dark .stat-val{color:#d8d0c8;}
+body.theme-dark .timer-stat-label,body.theme-dark .stat-label{color:#6a6260;}
+body.theme-dark .stat-card{background:rgba(30,24,38,.6);border-color:rgba(200,185,170,.12);}
+body.theme-dark .gallery-item{background:rgba(200,185,170,.08);}
+body.theme-dark .gallery-add{color:#5a5250;}
+body.theme-dark .inbox-card{background:rgba(30,24,38,.7);border-color:rgba(200,185,170,.12);}
+body.theme-dark .inbox-card-preview{color:#8a8280;}
+body.theme-dark .inbox-card-from{color:#6a6260;}
+body.theme-dark .aff-popup,body.theme-dark .unlock-box,body.theme-dark .inbox-detail-box,body.theme-dark .modal-box{background:rgba(20,14,26,.98);border-color:rgba(200,185,170,.15);}
+body.theme-dark .inbox-detail-from{color:#7a7270;}
+body.theme-dark .inbox-detail-body,body.theme-dark .unlock-letter{color:#d8d0c8;}
+body.theme-dark .inbox-detail-date,body.theme-dark .unlock-stage,body.theme-dark .inbox-detail-gaze{color:#5a5250;}
+body.theme-dark .inbox-detail-close,body.theme-dark .unlock-close{color:#6a6260;}
+body.theme-dark .unlock-title,body.theme-dark .aff-popup-pts{color:#e8e0d8;}
+body.theme-dark .aff-popup-stage{color:#d0c8c0;}
+body.theme-dark .aff-popup-label{color:#7a7270;}
+body.theme-dark .letter-body,body.theme-dark .ai-reply-text,body.theme-dark .dream-text{color:#d8d0c8;}
+body.theme-dark .letter-from,body.theme-dark .ai-reply-label{color:#6a6260;}
+body.theme-dark .letter-date,body.theme-dark .letter-gaze{color:#4a4248;}
+body.theme-dark .aff-stage,body.theme-dark .stage-label,body.theme-dark .aff-pts{color:#5a5250;}
+body.theme-dark .aff-bar-track{background:rgba(200,185,170,.08);}
+body.theme-dark .countdown-text{color:#6a6260;}
+body.theme-dark .ai-reply{background:rgba(30,24,38,.8);border-color:rgba(200,185,170,.12);}
+body.theme-dark .diary-input,body.theme-dark .mood-detail-input{color:#e8e0d8;}
+body.theme-dark .diary-input::placeholder,body.theme-dark .mood-detail-input::placeholder{color:#3a3238;}
+body.theme-dark .mood-detail-input{background:rgba(255,253,249,.05);border-color:rgba(200,185,170,.15);}
+body.theme-dark .quote-list-text{color:#d8d0c8;}
+body.theme-dark .quote-list-char{color:#6a6260;}
+body.theme-dark .inspo-text{color:#d0c8c0;}
+body.theme-dark .inspo-date,body.theme-dark .dream-meta{color:#5a5250;}
+body.theme-dark .setting-label{color:#8a8280;}
+body.theme-dark .section-label{color:#5a5250;}
+body.theme-dark .page-title{color:rgba(200,185,170,.3);}
+body.theme-dark .save-btn,body.theme-dark .send-btn,body.theme-dark .wish-add-btn{color:#9a9290;border-color:rgba(200,185,170,.2);}
+body.theme-dark .api-note{color:#5a5250;}
+body.theme-dark .theme-name{color:#e8e0d8;}
+body.theme-dark .theme-desc{color:#6a6260;}
+body.theme-dark .theme-opt{border-color:rgba(200,185,170,.15);}
+body.theme-dark .theme-opt.active{border-color:rgba(168,237,234,.4);background:rgba(168,237,234,.06);}
 body.theme-dark #nav{background:var(--nav-bg);}
-body.theme-dark .hero-letter-wrap{opacity:.1;}
-/* 輸入文字在暗色下 */
-body.theme-dark .reply-input,body.theme-dark .diary-input,body.theme-dark .mood-detail-input{color:var(--text-main);}
-body.theme-dark .wish-add-btn,body.theme-dark .send-btn,body.theme-dark .save-btn{color:var(--text-muted);}
+body.theme-dark .nav-btn{color:#c0b8b0;}
+body.theme-dark .nav-btn:hover{background:rgba(200,185,170,.08);border-color:rgba(200,185,170,.2);}
+body.theme-dark .nav-btn.active{background:rgba(168,237,234,.1);border-color:rgba(168,237,234,.25);}
+body.theme-dark .nav-logo{color:rgba(200,185,170,.5);}
+body.theme-dark .hero-letter-wrap{opacity:.07;}
+body.theme-dark .relation-btn.active{background:rgba(168,237,234,.12);border-color:rgba(168,237,234,.3);color:#a8edea;}
+body.theme-dark .birthday-banner{background:rgba(30,24,38,.8);color:#d8d0c8;}
+body.theme-dark .modal-title{color:#e8e0d8;}
+body.theme-dark .modal-label{color:#8a8280;}
+body.theme-dark .emoji-opt{background:rgba(255,253,249,.04);border-color:rgba(200,185,170,.12);}
+body.theme-dark .toggle-switch{background:rgba(160,148,136,.15);}
+body.theme-dark #webSearchLabel{color:#6a6260;}
 
 /* 主題切換器 */
 .theme-switcher{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;}
