@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>光</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✉</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════
@@ -27,32 +28,90 @@
 body.theme-dark{
   --bg:#0e0c10;
   --paper:rgba(255,253,249,0.05);
-  --paper-border:rgba(200,185,170,0.15);
+  --paper-border:rgba(200,185,170,0.18);
   --text-main:#e8e0d8;
-  --text-muted:#9a9088;
-  --text-soft:#6a6260;
-  --nav-bg:rgba(14,12,16,.85);
-  --input-bg:rgba(255,253,249,.04);
+  --text-muted:#c0b8b0;
+  --text-soft:#8a8280;
+  --nav-bg:rgba(14,12,16,.92);
+  --input-bg:rgba(255,253,249,.06);
   --shimmer-opacity:.07;
 }
-body.theme-dark .paper{background:rgba(28,22,34,.7);}
-body.theme-dark .char-card{background:rgba(255,253,249,.03);}
-body.theme-dark .char-card.active{background:rgba(255,253,249,.07);}
-body.theme-dark .daily-box,body.theme-dark .char-world,body.theme-dark .drift-bottle,body.theme-dark .quote-box{background:rgba(255,253,249,.03);}
-body.theme-dark .longing-banner{background:rgba(255,253,249,.04);}
-body.theme-dark .reply-area{background:rgba(255,253,249,.03);}
-body.theme-dark .inbox-slide-card{background:rgba(255,253,249,.04);}
-body.theme-dark .mood-btn{background:rgba(255,253,249,.03);}
-body.theme-dark .wish-input,body.theme-dark .setting-input,body.theme-dark .setting-textarea,body.theme-dark .modal-input,body.theme-dark .modal-textarea,body.theme-dark .relation-input{background:rgba(255,253,249,.05);color:var(--text-main);}
-body.theme-dark .timer-btn,body.theme-dark .timer-stat,body.theme-dark .io-btn,body.theme-dark .relation-btn,body.theme-dark .quote-char-sel{background:rgba(255,253,249,.04);color:var(--text-muted);}
-body.theme-dark .gallery-item,body.theme-dark .gallery-add{background:rgba(200,185,170,.06);}
-body.theme-dark .inbox-wall .inbox-card{background:rgba(255,253,249,.04);}
-body.theme-dark .aff-popup,body.theme-dark .unlock-box,body.theme-dark .inbox-detail-box,body.theme-dark .modal-box{background:rgba(20,16,24,.98);}
+body.theme-dark .paper{background:rgba(30,24,38,.78);border-color:rgba(200,185,170,.15);}
+body.theme-dark .char-card{background:rgba(255,253,249,.04);border-color:rgba(200,185,170,.12);}
+body.theme-dark .char-card.active{background:rgba(255,253,249,.09);border-color:rgba(200,185,170,.3);}
+body.theme-dark .char-name{color:#e8e0d8;}
+body.theme-dark .char-origin{color:#a09890;}
+body.theme-dark .daily-box,body.theme-dark .char-world,body.theme-dark .drift-bottle,body.theme-dark .quote-box{background:rgba(30,24,38,.65);border-color:rgba(200,185,170,.12);}
+body.theme-dark .daily-q,body.theme-dark .drift-req,body.theme-dark .quote-today-text{color:#d8d0c8;}
+body.theme-dark .char-world-val{color:#d0c8c0;}
+body.theme-dark .char-world-label,body.theme-dark .char-world-update{color:#6a6260;}
+body.theme-dark .drift-char{color:#7a7270;}
+body.theme-dark .longing-banner{background:rgba(30,24,38,.7);color:#c8c0b8;}
+body.theme-dark .reply-area{background:rgba(30,24,38,.6);border-color:rgba(200,185,170,.12);}
+body.theme-dark .reply-input{color:#e8e0d8;}
+body.theme-dark .reply-input::placeholder{color:#4a4248;}
+body.theme-dark .inbox-slide-card{background:rgba(30,24,38,.7);border-color:rgba(200,185,170,.12);}
+body.theme-dark .inbox-slide-preview{color:#8a8280;}
+body.theme-dark .inbox-slide-from{color:#6a6260;}
+body.theme-dark .mood-btn{background:rgba(255,253,249,.04);color:#a09890;border-color:rgba(200,185,170,.15);}
+body.theme-dark .mood-btn.selected{color:#e8e0d8;}
+body.theme-dark .wish-input,body.theme-dark .setting-input,body.theme-dark .setting-textarea,body.theme-dark .modal-input,body.theme-dark .modal-textarea,body.theme-dark .relation-input,body.theme-dark .quote-char-sel{background:rgba(255,253,249,.06);color:#e8e0d8;border-color:rgba(200,185,170,.15);}
+body.theme-dark .wish-input::placeholder,body.theme-dark .setting-input::placeholder,body.theme-dark .setting-textarea::placeholder,body.theme-dark .modal-input::placeholder,body.theme-dark .modal-textarea::placeholder{color:#4a4248;}
+body.theme-dark .wish-text{color:#d0c8c0;}
+body.theme-dark .wish-check{border-color:rgba(200,185,170,.25);}
+body.theme-dark .timer-btn,body.theme-dark .timer-stat,body.theme-dark .io-btn,body.theme-dark .relation-btn{background:rgba(255,253,249,.05);color:#a09890;border-color:rgba(200,185,170,.15);}
+body.theme-dark .timer-display,body.theme-dark .timer-stat-val,body.theme-dark .stat-val{color:#d8d0c8;}
+body.theme-dark .timer-stat-label,body.theme-dark .stat-label{color:#6a6260;}
+body.theme-dark .stat-card{background:rgba(30,24,38,.6);border-color:rgba(200,185,170,.12);}
+body.theme-dark .gallery-item{background:rgba(200,185,170,.08);}
+body.theme-dark .gallery-add{color:#5a5250;}
+body.theme-dark .inbox-card{background:rgba(30,24,38,.7);border-color:rgba(200,185,170,.12);}
+body.theme-dark .inbox-card-preview{color:#8a8280;}
+body.theme-dark .inbox-card-from{color:#6a6260;}
+body.theme-dark .aff-popup,body.theme-dark .unlock-box,body.theme-dark .inbox-detail-box,body.theme-dark .modal-box{background:rgba(20,14,26,.98);border-color:rgba(200,185,170,.15);}
+body.theme-dark .inbox-detail-from{color:#7a7270;}
+body.theme-dark .inbox-detail-body,body.theme-dark .unlock-letter{color:#d8d0c8;}
+body.theme-dark .inbox-detail-date,body.theme-dark .unlock-stage,body.theme-dark .inbox-detail-gaze{color:#5a5250;}
+body.theme-dark .inbox-detail-close,body.theme-dark .unlock-close{color:#6a6260;}
+body.theme-dark .unlock-title,body.theme-dark .aff-popup-pts{color:#e8e0d8;}
+body.theme-dark .aff-popup-stage{color:#d0c8c0;}
+body.theme-dark .aff-popup-label{color:#7a7270;}
+body.theme-dark .letter-body,body.theme-dark .ai-reply-text,body.theme-dark .dream-text{color:#d8d0c8;}
+body.theme-dark .letter-from,body.theme-dark .ai-reply-label{color:#6a6260;}
+body.theme-dark .letter-date,body.theme-dark .letter-gaze{color:#4a4248;}
+body.theme-dark .aff-stage,body.theme-dark .stage-label,body.theme-dark .aff-pts{color:#5a5250;}
+body.theme-dark .aff-bar-track{background:rgba(200,185,170,.08);}
+body.theme-dark .countdown-text{color:#6a6260;}
+body.theme-dark .ai-reply{background:rgba(30,24,38,.8);border-color:rgba(200,185,170,.12);}
+body.theme-dark .diary-input,body.theme-dark .mood-detail-input{color:#e8e0d8;}
+body.theme-dark .diary-input::placeholder,body.theme-dark .mood-detail-input::placeholder{color:#3a3238;}
+body.theme-dark .mood-detail-input{background:rgba(255,253,249,.05);border-color:rgba(200,185,170,.15);}
+body.theme-dark .quote-list-text{color:#d8d0c8;}
+body.theme-dark .quote-list-char{color:#6a6260;}
+body.theme-dark .inspo-text{color:#d0c8c0;}
+body.theme-dark .inspo-date,body.theme-dark .dream-meta{color:#5a5250;}
+body.theme-dark .setting-label{color:#8a8280;}
+body.theme-dark .section-label{color:#5a5250;}
+body.theme-dark .page-title{color:rgba(200,185,170,.3);}
+body.theme-dark .save-btn,body.theme-dark .send-btn,body.theme-dark .wish-add-btn{color:#9a9290;border-color:rgba(200,185,170,.2);}
+body.theme-dark .api-note{color:#5a5250;}
+body.theme-dark .theme-name{color:#e8e0d8;}
+body.theme-dark .theme-desc{color:#6a6260;}
+body.theme-dark .theme-opt{border-color:rgba(200,185,170,.15);}
+body.theme-dark .theme-opt.active{border-color:rgba(168,237,234,.4);background:rgba(168,237,234,.06);}
 body.theme-dark #nav{background:var(--nav-bg);}
-body.theme-dark .hero-letter-wrap{opacity:.1;}
-/* 輸入文字在暗色下 */
-body.theme-dark .reply-input,body.theme-dark .diary-input,body.theme-dark .mood-detail-input{color:var(--text-main);}
-body.theme-dark .wish-add-btn,body.theme-dark .send-btn,body.theme-dark .save-btn{color:var(--text-muted);}
+body.theme-dark .nav-btn{color:#c0b8b0;}
+body.theme-dark .nav-btn:hover{background:rgba(200,185,170,.08);border-color:rgba(200,185,170,.2);}
+body.theme-dark .nav-btn.active{background:rgba(168,237,234,.1);border-color:rgba(168,237,234,.25);}
+body.theme-dark .nav-logo{color:rgba(200,185,170,.5);}
+body.theme-dark .hero-letter-wrap{opacity:.07;}
+body.theme-dark .relation-btn.active{background:rgba(168,237,234,.12);border-color:rgba(168,237,234,.3);color:#a8edea;}
+body.theme-dark .birthday-banner{background:rgba(30,24,38,.8);color:#d8d0c8;}
+body.theme-dark .modal-title{color:#e8e0d8;}
+body.theme-dark .modal-label{color:#8a8280;}
+body.theme-dark .emoji-opt{background:rgba(255,253,249,.04);border-color:rgba(200,185,170,.12);}
+body.theme-dark .toggle-switch{background:rgba(160,148,136,.15);}
+body.theme-dark #webSearchLabel{color:#6a6260;}
 
 /* 主題切換器 */
 .theme-switcher{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;}
@@ -369,6 +428,10 @@ body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--text-mai
 .save-btn:hover{background:rgba(140,128,118,.25);}
 .api-note{font-size:11px;color:var(--text-soft);line-height:1.8;border-left:2px solid rgba(160,148,136,.25);padding-left:10px;margin-top:.5rem;}
 .save-msg{font-size:12px;color:var(--text-soft);margin-top:.8rem;display:none;}
+.toggle-switch{width:40px;height:22px;border-radius:11px;background:rgba(160,148,136,.2);border:.5px solid var(--paper-border);cursor:pointer;position:relative;transition:background .25s ease;flex-shrink:0;}
+.toggle-switch.on{background:rgba(168,237,234,.4);border-color:rgba(168,237,234,.5);}
+.toggle-knob{width:16px;height:16px;border-radius:50%;background:#c8c0b8;position:absolute;top:2px;left:2px;transition:all .25s ease;}
+.toggle-switch.on .toggle-knob{left:20px;background:#5a9a94;}
 .io-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.8rem;}
 .io-btn{border-radius:8px;padding:8px 16px;border:.5px solid var(--paper-border);background:rgba(255,252,248,.7);font-family:'Noto Serif TC',serif;font-size:13px;color:var(--text-muted);cursor:pointer;transition:all .2s ease;}
 .io-btn:hover{background:rgba(255,252,248,1);color:#5a5248;}
@@ -625,6 +688,7 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   <div class="section-label">信件統計</div>
   <div class="stat-grid" id="statGrid"></div>
   <div class="paper" style="margin-bottom:1.5rem"><div class="section-label">本週最常提的情緒</div><div class="emotion-row" id="emotionRow"></div></div>
+  <button class="io-btn" style="margin-bottom:1.5rem;font-size:11px;color:rgba(200,80,80,.6);border-color:rgba(200,80,80,.2)" onclick="if(confirm('確定要重置所有統計數字嗎？'))resetStats()">重置統計數字</button>
 
   <div class="section-label">創作計時器</div>
   <div class="paper">
@@ -710,7 +774,29 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   <div class="paper">
     <div class="section-label">API 金鑰</div>
     <div class="setting-row"><div class="setting-label">Anthropic API Key</div><input class="setting-input" id="settingApiKey" type="password" placeholder="sk-ant-…"/><div class="api-note">取得：console.anthropic.com → API Keys → Create Key<br>金鑰只存在瀏覽器本地。</div></div>
+    <div class="setting-row" style="margin-top:1rem">
+      <div class="setting-label">網路搜尋（需額外 $0.01 / 次）</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:.4rem">
+        <div class="toggle-switch" id="webSearchToggle" onclick="toggleWebSearch()">
+          <div class="toggle-knob" id="webSearchKnob"></div>
+        </div>
+        <span style="font-size:12px;color:var(--text-soft)" id="webSearchLabel">關閉</span>
+      </div>
+      <div class="api-note" style="margin-top:.5rem">開啟後角色回信前會先搜尋最新資訊。</div>
+    </div>
   </div>
+
+  <div class="paper">
+    <div class="section-label">☁️ GitHub 雲端同步</div>
+    <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">填入後，所有資料會自動儲存到你的 GitHub，換裝置或重開瀏覽器都不會消失。</div>
+    <div class="setting-row"><div class="setting-label">GitHub Token</div><input class="setting-input" id="settingGhToken" type="password" placeholder="ghp_…"/><div class="api-note">Token 只存在瀏覽器本地，不會上傳到任何地方。</div></div>
+    <div style="display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap">
+      <button class="io-btn" onclick="syncToGitHub()">☁️ 立即儲存到 GitHub</button>
+      <button class="io-btn" onclick="syncFromGitHub()">🔄 從 GitHub 讀取資料</button>
+    </div>
+    <div style="font-size:12px;margin-top:.6rem" id="syncStatus"></div>
+  </div>
+
   <div class="paper">
     <div class="section-label">匯出 / 匯入資料</div>
     <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">匯出會下載一個 JSON 檔案，備份你的所有資料。匯入時選擇該檔案即可還原。</div>
@@ -844,7 +930,7 @@ function init(){
   loadState();
   if(!state.chars||!state.chars.length)state.chars=JSON.parse(JSON.stringify(DEFAULT_CHARS));
   if(!state.currentCharId&&state.chars.length)state.currentCharId=state.chars[0].id;
-  setSeason();setDailyQuestion();setLetterDate();loadTheme();
+  setSeason();setDailyQuestion();setLetterDate();loadTheme();loadWebSearch();
   renderChars();applyCharTheme();updateAffBar();renderMoodChart();
   checkBirthday();checkLonging();buildNeonPresets();buildEmojiPicker();loadSettingsUI();
   renderWishes();renderQuotes();renderQuoteCharSel();renderInspo();renderDreams();
@@ -853,10 +939,71 @@ function init(){
   setInterval(updateWorldState,30*60*1000);setInterval(checkLonging,60*60*1000);
 }
 
-function saveState(){try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}}
+// ── GitHub 雲端同步 ──
+const GH_OWNER='act0621';
+const GH_REPO='hikari';
+const GH_FILE='hikari-data.json';
+
+function getGhToken(){return document.getElementById('settingGhToken')?.value.trim()||'';}
+
+function setSyncStatus(msg,color='var(--text-soft)'){
+  const el=document.getElementById('syncStatus');
+  if(el){el.textContent=msg;el.style.color=color;}
+}
+
+async function syncToGitHub(){
+  const token=getGhToken();
+  if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
+  setSyncStatus('儲存中……');
+  try{
+    // 先取得現有檔案的 sha（更新需要）
+    let sha=null;
+    try{
+      const r=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+      if(r.ok){const d=await r.json();sha=d.sha;}
+    }catch(e){}
+
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    const body={message:'光：自動同步資料 '+new Date().toLocaleString('zh-TW'),content};
+    if(sha)body.sha=sha;
+
+    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{
+      method:'PUT',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    if(res.ok){setSyncStatus('✓ 已儲存到 GitHub · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');}
+    else{const err=await res.json();setSyncStatus('儲存失敗：'+err.message,'rgba(200,80,80,.7)');}
+  }catch(e){setSyncStatus('網路錯誤，請稍後再試','rgba(200,80,80,.7)');}
+}
+
+async function syncFromGitHub(){
+  const token=getGhToken();
+  if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
+  setSyncStatus('讀取中……');
+  try{
+    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+    if(!res.ok){setSyncStatus('找不到雲端資料，請先儲存一次','rgba(200,80,80,.7)');return;}
+    const d=await res.json();
+    const json=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))));
+    Object.assign(state,json);
+    saveState();
+    init();
+    setSyncStatus('✓ 已從 GitHub 讀取資料 · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');
+  }catch(e){setSyncStatus('讀取失敗：'+e.message,'rgba(200,80,80,.7)');}
+}
+
+// 每次 saveState 後自動同步到 GitHub（如果有 token）
+const _origSaveState=saveState;
+function saveState(){
+  try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}
+  // 非同步自動上傳，不阻塞操作
+  const token=getGhToken();
+  if(token)syncToGitHub().catch(()=>{});
+}
 function loadState(){try{const s=localStorage.getItem('hikari-v4');if(s)Object.assign(state,JSON.parse(s));}catch(e){}}
-function loadSettingsUI(){try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);['settingName','settingHobbies','settingAbout','settingApiKey'].forEach((id,i)=>{document.getElementById(id).value=[d.name,d.hobbies,d.about,d.apiKey][i]||'';});}}catch(e){}}
-function saveSettings(){const s={name:document.getElementById('settingName').value,hobbies:document.getElementById('settingHobbies').value,about:document.getElementById('settingAbout').value,apiKey:document.getElementById('settingApiKey').value};try{localStorage.setItem('hikari-settings',JSON.stringify(s));}catch(e){}const m=document.getElementById('saveMsg');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
+function loadSettingsUI(){try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);document.getElementById('settingName').value=d.name||'';document.getElementById('settingHobbies').value=d.hobbies||'';document.getElementById('settingAbout').value=d.about||'';document.getElementById('settingApiKey').value=d.apiKey||'';if(document.getElementById('settingGhToken'))document.getElementById('settingGhToken').value=d.ghToken||'';}}catch(e){}}
+function saveSettings(){const s={name:document.getElementById('settingName').value,hobbies:document.getElementById('settingHobbies').value,about:document.getElementById('settingAbout').value,apiKey:document.getElementById('settingApiKey').value,ghToken:document.getElementById('settingGhToken')?.value||''};try{localStorage.setItem('hikari-settings',JSON.stringify(s));}catch(e){}const m=document.getElementById('saveMsg');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
 function getApiKey(){return document.getElementById('settingApiKey').value.trim();}
 function getUserContext(){const n=document.getElementById('settingName').value.trim(),h=document.getElementById('settingHobbies').value.trim(),a=document.getElementById('settingAbout').value.trim();let c='';if(n)c+=`對方名字是${n}。`;if(h)c+=`興趣：${h}。`;if(a)c+=`關於她：${a}。`;return c;}
 function getCurrentChar(){return state.chars.find(c=>c.id===state.currentCharId);}
@@ -1003,7 +1150,21 @@ function playUnlockAnim(){const ov=document.getElementById('unlockAnimOverlay');
 function handleUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{state.uploadedB64=ev.target.result.split(',')[1];document.getElementById('preview').src=ev.target.result;document.getElementById('preview').style.display='block';document.getElementById('uploadLabel').style.display='none';addImageToGallery(ev.target.result);};r.readAsDataURL(file);}
 
 // ── API ──
+// ── 網路搜尋開關 ──
+let webSearchEnabled=false;
+function toggleWebSearch(){
+  webSearchEnabled=!webSearchEnabled;
+  document.getElementById('webSearchToggle')?.classList.toggle('on',webSearchEnabled);
+  const label=document.getElementById('webSearchLabel');if(label)label.textContent=webSearchEnabled?'開啟':'關閉';
+  try{localStorage.setItem('hikari-websearch',webSearchEnabled?'1':'0');}catch(e){}
+}
+function loadWebSearch(){
+  try{const v=localStorage.getItem('hikari-websearch');webSearchEnabled=v==='1';document.getElementById('webSearchToggle')?.classList.toggle('on',webSearchEnabled);const label=document.getElementById('webSearchLabel');if(label)label.textContent=webSearchEnabled?'開啟':'關閉';}catch(e){}
+}
+
 async function callAPI(apiKey,system,messages,maxTokens=1000){
+  const bodyObj={model:'claude-sonnet-4-6',max_tokens:maxTokens,system,messages};
+  if(webSearchEnabled)bodyObj.tools=[{type:'web_search_20250305',name:'web_search'}];
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
@@ -1012,7 +1173,7 @@ async function callAPI(apiKey,system,messages,maxTokens=1000){
       'anthropic-version':'2023-06-01',
       'anthropic-dangerous-direct-browser-access':'true'
     },
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system,messages})
+    body:JSON.stringify(bodyObj)
   });
   if(!res.ok){const err=await res.json().catch(()=>({}));console.error('API error:',err);return null;}
   const data=await res.json();
@@ -1038,8 +1199,13 @@ async function sendReply(){
     catch(e){console.error('sendReply error:',e);reply='（信送出去了，但還沒有回音……）\n\n請確認：①金鑰是否正確 ②設定頁是否有按「儲存設定」';}
   }
   else{reply='請先在設定裡填入 API 金鑰。';}
-  aiText.textContent=reply;document.getElementById('letterBody').textContent=reply;document.getElementById('letterDate').textContent=formatDate(new Date());
-  state.lastLetterDate=new Date().toISOString();state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;
+  aiText.textContent=reply;
+  document.getElementById('letterBody').textContent=reply;
+  document.getElementById('letterDate').textContent=formatDate(new Date());
+  state.lastLetterDate=new Date().toISOString();
+  // 只有真正收到AI回覆才計入統計
+  const isRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
+  if(isRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   const pts=8+Math.floor(Math.random()*12)+(state.uploadedB64?Math.floor(Math.random()*6):0);
   const sentMsg=text||'（分享了一張畫）';
   gainAffection(pts);saveToInbox(char,reply,sentMsg,sentMsg);
@@ -1071,7 +1237,9 @@ async function sendDiary(){
   const apiKey=getApiKey();
   if(apiKey){try{reply=await callAPI(apiKey,char.prompt+'\n\n'+getUserContext()+(mCtx?'\n'+mCtx:''),[{role:'user',content}])||reply;}catch(e){reply='（信送出去了，但還沒有回音……）';}}
   else reply='請先在設定裡填入 API 金鑰。';
-  rt.textContent=reply;state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;
+  rt.textContent=reply;
+  const isDiaryRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
+  if(isDiaryRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   gainAffection(5+Math.floor(Math.random()*8));saveToInbox(char,reply,content.slice(0,40)+'……',content);state.lastLetterDate=new Date().toISOString();saveState();renderStats();
 }
 function renderMoodChart(){const chart=document.getElementById('moodChart'),dEl=document.getElementById('chartDays');chart.innerHTML='';dEl.innerHTML='';const char=getCurrentChar();const c1=char?.c1||'#a8edea',c2=char?.c2||'#fed6e3';Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));const key=d.toISOString().split('T')[0];const entry=state.moodHistory.slice().reverse().find(m=>m.date===key);const bar=document.createElement('div');bar.className='chart-bar';bar.style.height=((entry?.val||0)*16)+'px';bar.style.background=`linear-gradient(to top,${c1},${c2})`;bar.title=entry?entry.mood:'無記錄';chart.appendChild(bar);const label=document.createElement('div');label.className='chart-day';label.textContent=(d.getMonth()+1)+'/'+d.getDate();dEl.appendChild(label);});}
@@ -1163,10 +1331,16 @@ function renderSentInbox(){
 
 function deleteInboxItem(idx,e){
   if(e)e.stopPropagation();
+  const item=state.inbox[idx];
+  if(item){
+    state.totalLetters=Math.max(0,(state.totalLetters||0)-1);
+    state.totalWords=Math.max(0,(state.totalWords||0)-item.body.length);
+  }
   state.inbox.splice(idx,1);
   saveState();renderInboxSlider();
   if(inboxTab==='his')renderInbox();else renderSentInbox();
   if(openInboxIdx!==null)closeInboxDetail();
+  renderStats();
 }
 function openInboxDetail(idx){
   openInboxIdx=idx;const item=state.inbox[idx];
@@ -1184,6 +1358,7 @@ function openInboxDetail(idx){
 function closeInboxDetail(){document.getElementById('inboxDetail').classList.remove('show');if(gazeTimer){clearInterval(gazeTimer);gazeTimer=null;}openInboxIdx=null;}
 
 // ── 統計 ──
+function resetStats(){state.totalLetters=0;state.totalWords=0;saveState();renderStats();}
 function renderStats(){
   const grid=document.getElementById('statGrid');if(!grid)return;
   grid.innerHTML=`<div class="stat-card"><div class="stat-val">${state.totalLetters||0}</div><div class="stat-label">收到的信</div></div><div class="stat-card"><div class="stat-val">${state.totalWords||0}</div><div class="stat-label">累計字數</div></div><div class="stat-card"><div class="stat-val">${state.inbox?.length||0}</div><div class="stat-label">信件存檔</div></div><div class="stat-card"><div class="stat-val">${state.gallery?.length||0}</div><div class="stat-label">畫作上傳</div></div>`;
