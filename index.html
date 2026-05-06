@@ -890,8 +890,8 @@ const DAILY_QUESTIONS=['你最近有在創作嗎？\n不管畫了什麼，都可
 
 // CUSTOMIZE-CHARS
 const DEFAULT_CHARS=[
-  {id:'char_default_1',name:'他',origin:'原創角色',emoji:'🌙',c1:'#a8edea',c2:'#fed6e3',birthday:'',habit:'每週一會問一個關於創作的問題',whispers:['你知道的。','謝謝你把這個給我看。','……我在聽。','你今天畫了多久？'],prompt:'你是一個話少但溫柔的原創角色，和創作者之間有安靜的默契。說話簡短，帶有被觸動卻不輕易表露的質感。請用第一人稱像寫信一樣，根據對方分享的內容寫一封短信。繁體中文，120字以內。'},
-  {id:'char_default_2',name:'星回',origin:'戀與深空',emoji:'✦',c1:'#c9b8f5',c2:'#f5b8d8',birthday:'10-16',habit:'每個月15號會寄一首短詩',whispers:['光是真實存在的。','你的畫讓我想停留很久。','今天也辛苦了。','有什麼想說的嗎？'],prompt:'你是沈星回，來自戀與深空，溫柔理性，說話細膩，有時帶一點文學感。請用第一人稱像寫信一樣，根據對方分享的內容寫一封短信。繁體中文，120字以內。'},
+  {id:'char_default_1',name:'他',origin:'原創角色',emoji:'🌙',c1:'#a8edea',c2:'#fed6e3',birthday:'',habit:'每週一會問一個關於創作的問題',whispers:['你知道的。','謝謝你把這個給我看。','……我在聽。','你今天畫了多久？'],prompt:'話少但溫柔，和創作者之間有安靜的默契。說話簡短，帶有被觸動卻不輕易表露的質感。喜歡用問句陪伴，不給答案只給存在。'},
+  {id:'char_default_2',name:'星回',origin:'戀與深空',emoji:'✦',c1:'#c9b8f5',c2:'#f5b8d8',birthday:'10-16',habit:'每個月15號會寄一首短詩',whispers:['光是真實存在的。','你的畫讓我想停留很久。','今天也辛苦了。','有什麼想說的嗎？'],prompt:'溫柔理性，說話細膩，有時帶一點文學感。觀察力強，會注意到別人忽略的細節。說話有分量，不輕易表露情緒但情感真實。'},
 ];
 
 const NEON_PRESETS=[{name:'薄荷粉',c1:'#a8edea',c2:'#fed6e3'},{name:'紫藕',c1:'#c9b8f5',c2:'#f5b8d8'},{name:'暖金橘',c1:'#ffd6a5',c2:'#ffb3c6'},{name:'水藍薰衣',c1:'#b8d8f5',c2:'#e0c8f8'},{name:'萊姆綠',c1:'#d4f0a0',c2:'#a8edca'},{name:'珊瑚金',c1:'#ffb6a0',c2:'#ffd6a0'},{name:'星空藍',c1:'#8eb8f8',c2:'#c8b8f8'},{name:'霧玫瑰',c1:'#f8c8d8',c2:'#f8d8c0'}];
@@ -956,15 +956,17 @@ async function syncToGitHub(){
   if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
   setSyncStatus('儲存中……');
   try{
-    // 先取得現有檔案的 sha（更新需要）
     let sha=null;
-    try{
-      const r=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
-      if(r.ok){const d=await r.json();sha=d.sha;}
-    }catch(e){}
+    try{const r=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});if(r.ok){const d=await r.json();sha=d.sha;}}catch(e){}
 
-    const content=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-    const body={message:'光：自動同步資料 '+new Date().toLocaleString('zh-TW'),content};
+    // 用 TextEncoder 正確處理中文
+    const jsonStr=JSON.stringify(state);
+    const bytes=new TextEncoder().encode(jsonStr);
+    let binary='';
+    bytes.forEach(b=>binary+=String.fromCharCode(b));
+    const content=btoa(binary);
+
+    const body={message:'光：自動同步 '+new Date().toLocaleString('zh-TW'),content};
     if(sha)body.sha=sha;
 
     const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{
@@ -973,8 +975,8 @@ async function syncToGitHub(){
       body:JSON.stringify(body)
     });
     if(res.ok){setSyncStatus('✓ 已儲存到 GitHub · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');}
-    else{const err=await res.json();setSyncStatus('儲存失敗：'+err.message,'rgba(200,80,80,.7)');}
-  }catch(e){setSyncStatus('網路錯誤，請稍後再試','rgba(200,80,80,.7)');}
+    else{const err=await res.json().catch(()=>({}));setSyncStatus('儲存失敗：'+(err.message||res.status),'rgba(200,80,80,.7)');}
+  }catch(e){setSyncStatus('錯誤：'+e.message,'rgba(200,80,80,.7)');}
 }
 
 async function syncFromGitHub(){
@@ -985,21 +987,23 @@ async function syncFromGitHub(){
     const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
     if(!res.ok){setSyncStatus('找不到雲端資料，請先儲存一次','rgba(200,80,80,.7)');return;}
     const d=await res.json();
-    const json=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))));
+
+    // 用 TextDecoder 正確解碼中文
+    const binary=atob(d.content.replace(/\n/g,''));
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const jsonStr=new TextDecoder().decode(bytes);
+    const json=JSON.parse(jsonStr);
+
     Object.assign(state,json);
-    saveState();
-    init();
-    setSyncStatus('✓ 已從 GitHub 讀取資料 · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');
+    saveState();init();
+    setSyncStatus('✓ 已讀取 · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');
   }catch(e){setSyncStatus('讀取失敗：'+e.message,'rgba(200,80,80,.7)');}
 }
 
-// 每次 saveState 後自動同步到 GitHub（如果有 token）
-const _origSaveState=saveState;
+// 每次 saveState 只存 localStorage，手動按才同步 GitHub
 function saveState(){
   try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}
-  // 非同步自動上傳，不阻塞操作
-  const token=getGhToken();
-  if(token)syncToGitHub().catch(()=>{});
 }
 function loadState(){try{const s=localStorage.getItem('hikari-v4');if(s)Object.assign(state,JSON.parse(s));}catch(e){}}
 function loadSettingsUI(){try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);document.getElementById('settingName').value=d.name||'';document.getElementById('settingHobbies').value=d.hobbies||'';document.getElementById('settingAbout').value=d.about||'';document.getElementById('settingApiKey').value=d.apiKey||'';if(document.getElementById('settingGhToken'))document.getElementById('settingGhToken').value=d.ghToken||'';}}catch(e){}}
@@ -1130,9 +1134,20 @@ function buildNeonPresets(){const row=document.getElementById('neonPresets');NEO
 function buildEmojiPicker(){const row=document.getElementById('emojiRow');EMOJIS.forEach(e=>{const btn=document.createElement('div');btn.className='emoji-opt'+(e===selectedEmoji?' selected':'');btn.textContent=e;btn.onclick=()=>{selectedEmoji=e;document.querySelectorAll('.emoji-opt').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');};row.appendChild(btn);});}
 function updateColorPreview(){const c1=document.getElementById('mColor1').value,c2=document.getElementById('mColor2').value;document.getElementById('colorPreviewBar').style.background=`linear-gradient(90deg,${c1},${c2})`;}
 function openAddChar(){editingCharId=null;selectedAvatarImg=null;document.getElementById('modalTitle').textContent='新增角色';document.getElementById('deleteCharBtn').style.display='none';['mName','mOrigin','mPrompt','mBirthday','mHabit','mWhispers','mKnowledge'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('mColor1').value='#a8edea';document.getElementById('mColor2').value='#fed6e3';selectedEmoji='🌙';document.querySelectorAll('.emoji-opt').forEach(b=>b.classList.toggle('selected',b.textContent==='🌙'));document.querySelectorAll('.neon-preset').forEach((b,i)=>b.classList.toggle('selected',i===0));const prev=document.getElementById('mAvatarPreview');if(prev)prev.textContent='🌙';updateColorPreview();document.getElementById('charModal').classList.add('show');}
-function openEditChar(id){editingCharId=id;selectedAvatarImg=null;const char=state.chars.find(c=>c.id===id);if(!char)return;document.getElementById('modalTitle').textContent='編輯角色';document.getElementById('deleteCharBtn').style.display='block';document.getElementById('mName').value=char.name;document.getElementById('mOrigin').value=char.origin||'';document.getElementById('mPrompt').value=(char.prompt||'').split('。請用第一人稱')[0].replace(/^你是[^，]+，/,'').replace(/\n\n你知道的補充資訊.*$/s,'');document.getElementById('mBirthday').value=char.birthday||'';document.getElementById('mHabit').value=char.habit||'';document.getElementById('mWhispers').value=(char.whispers||[]).join('\n');const kEl=document.getElementById('mKnowledge');if(kEl)kEl.value=char.knowledge||'';document.getElementById('mColor1').value=char.c1;document.getElementById('mColor2').value=char.c2;selectedEmoji=char.emoji;document.querySelectorAll('.emoji-opt').forEach(b=>b.classList.toggle('selected',b.textContent===selectedEmoji));const prev=document.getElementById('mAvatarPreview');if(prev){if(char.avatarImg){prev.innerHTML=`<img src="${char.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;selectedAvatarImg=char.avatarImg;}else prev.textContent=char.emoji;}updateColorPreview();document.getElementById('charModal').classList.add('show');}
+function openEditChar(id){editingCharId=id;selectedAvatarImg=null;const char=state.chars.find(c=>c.id===id);if(!char)return;document.getElementById('modalTitle').textContent='編輯角色';document.getElementById('deleteCharBtn').style.display='block';document.getElementById('mName').value=char.name;document.getElementById('mOrigin').value=char.origin||'';
+  // 直接顯示原始個性描述
+  document.getElementById('mPrompt').value=char.prompt||'';
+  document.getElementById('mBirthday').value=char.birthday||'';document.getElementById('mHabit').value=char.habit||'';document.getElementById('mWhispers').value=(char.whispers||[]).join('\n');const kEl=document.getElementById('mKnowledge');if(kEl)kEl.value=char.knowledge||'';document.getElementById('mColor1').value=char.c1;document.getElementById('mColor2').value=char.c2;selectedEmoji=char.emoji;document.querySelectorAll('.emoji-opt').forEach(b=>b.classList.toggle('selected',b.textContent===selectedEmoji));const prev=document.getElementById('mAvatarPreview');if(prev){if(char.avatarImg){prev.innerHTML=`<img src="${char.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;selectedAvatarImg=char.avatarImg;}else prev.textContent=char.emoji;}updateColorPreview();document.getElementById('charModal').classList.add('show');}
 function closeCharModal(){document.getElementById('charModal').classList.remove('show');}
-function saveChar(){const name=document.getElementById('mName').value.trim();if(!name){alert('請輸入角色名稱');return;}const c1=document.getElementById('mColor1').value,c2=document.getElementById('mColor2').value;const pv=document.getElementById('mPrompt').value.trim();const kv=(document.getElementById('mKnowledge')?.value||'').trim();const knowledgeNote=kv?`\n\n你知道的補充資訊：${kv}`:'';const fp=pv?`你是${name}，${pv}。請用第一人稱像寫信一樣，根據對方分享的內容寫一封短信。繁體中文，120字以內。${knowledgeNote}`:`你是${name}，請用第一人稱像寫信一樣，根據對方分享的內容寫一封短信。繁體中文，120字以內。${knowledgeNote}`;const whispers=(document.getElementById('mWhispers')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);const cd={name,origin:document.getElementById('mOrigin').value.trim(),emoji:selectedEmoji,avatarImg:selectedAvatarImg||null,c1,c2,prompt:fp,knowledge:kv,whispers,birthday:document.getElementById('mBirthday').value.trim(),habit:document.getElementById('mHabit').value.trim()};if(editingCharId){const idx=state.chars.findIndex(c=>c.id===editingCharId);if(idx!==-1)state.chars[idx]={...state.chars[idx],...cd};}else{const nc={id:'char_'+Date.now(),...cd};state.chars.push(nc);state.currentCharId=nc.id;}saveState();renderChars();applyCharTheme();updateAffBar();renderQuoteCharSel();closeCharModal();updateWorldState();drawRelation();}
+function saveChar(){const name=document.getElementById('mName').value.trim();if(!name){alert('請輸入角色名稱');return;}const c1=document.getElementById('mColor1').value,c2=document.getElementById('mColor2').value;
+  // prompt 欄位只存純個性描述，不加指令句
+  const pv=document.getElementById('mPrompt').value.trim();
+  const kv=(document.getElementById('mKnowledge')?.value||'').trim();
+  const whispers=(document.getElementById('mWhispers')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const cd={name,origin:document.getElementById('mOrigin').value.trim(),emoji:selectedEmoji,avatarImg:selectedAvatarImg||null,c1,c2,prompt:pv,knowledge:kv,whispers,birthday:document.getElementById('mBirthday').value.trim(),habit:document.getElementById('mHabit').value.trim()};
+  if(editingCharId){const idx=state.chars.findIndex(c=>c.id===editingCharId);if(idx!==-1)state.chars[idx]={...state.chars[idx],...cd};}
+  else{const nc={id:'char_'+Date.now(),...cd};state.chars.push(nc);state.currentCharId=nc.id;}
+  saveState();renderChars();applyCharTheme();updateAffBar();renderQuoteCharSel();closeCharModal();updateWorldState();drawRelation();}
 function deleteChar(){if(!editingCharId||!confirm('確定刪除這個角色？此動作無法復原。'))return;state.chars=state.chars.filter(c=>c.id!==editingCharId);if(state.currentCharId===editingCharId)state.currentCharId=state.chars[0]?.id||null;state.relations=(state.relations||[]).filter(r=>r.from!==editingCharId&&r.to!==editingCharId);saveState();renderChars();applyCharTheme();closeCharModal();drawRelation();}
 
 // ── 好感值 ──
@@ -1142,12 +1157,47 @@ function updateAffBar(){const aff=getAff(),si=getStage(),cur=STAGES[si],next=STA
 function gainAffection(pts){const id=state.currentCharId;if(!id)return;const prev=state.stage[id]||0;state.affection[id]=(state.affection[id]||0)+pts;let ns=0;for(let i=STAGES.length-1;i>=0;i--){if(state.affection[id]>=STAGES[i].pts){ns=i;break;}}const up=ns>prev;state.stage[id]=ns;updateAffBar();saveState();const char=getCurrentChar();showAffPopup(pts,up?STAGES[ns].name:null,char?.c1||'#a8edea',char?.c2||'#fed6e3');if(up)setTimeout(()=>triggerStageUnlock(STAGES[ns].name),1800);}
 function showAffPopup(pts,stage,c1,c2){document.getElementById('affPopupPts').textContent='+'+pts;document.getElementById('affPopupGlow').style.background=`linear-gradient(135deg,${c1},${c2})`;document.getElementById('affPopupStage').textContent=stage?'✦ 關係升級：'+stage:'好感度上升了';document.getElementById('affPopup').classList.add('show');if(!stage)setTimeout(closeAffPopup,2000);}
 function closeAffPopup(){document.getElementById('affPopup').classList.remove('show');}
-async function triggerStageUnlock(stageName){closeAffPopup();playUnlockAnim();const char=getCurrentChar();document.getElementById('unlockStage').textContent=stageName;document.getElementById('unlockBg').style.background=`linear-gradient(135deg,${char?.c1||'#a8edea'},${char?.c2||'#fed6e3'})`;document.getElementById('unlockLetter').textContent='……正在生成這封特別的信……';document.getElementById('unlockOverlay').classList.add('show');let letter=`親愛的——\n\n我們之間的距離，好像近了一點。\n謝謝你一直把畫拿給我看，把那些話說給我聽。\n\n——　${char?.name||''}`;const apiKey=getApiKey();if(apiKey&&char){try{const r=await callAPI(apiKey,`你是${char.name}，${char.prompt}。現在關係剛升級到「${stageName}」。請寫一封特別的長信（200字以上），表達這段關係對你的意義。繁體中文，有文學感。`,[{role:'user',content:`關係升級到${stageName}了，請寫一封特別的信。`}]);letter=r||letter;}catch(e){}}document.getElementById('unlockLetter').textContent=letter;if(char)saveToInbox(char,letter,`✦ 關係升級：${stageName}`);}
+async function triggerStageUnlock(stageName){closeAffPopup();playUnlockAnim();const char=getCurrentChar();document.getElementById('unlockStage').textContent=stageName;document.getElementById('unlockBg').style.background=`linear-gradient(135deg,${char?.c1||'#a8edea'},${char?.c2||'#fed6e3'})`;document.getElementById('unlockLetter').textContent='……正在生成這封特別的信……';document.getElementById('unlockOverlay').classList.add('show');let letter=`親愛的——\n\n我們之間的距離，好像近了一點。\n謝謝你一直把畫拿給我看，把那些話說給我聽。\n\n——　${char?.name||''}`;const apiKey=getApiKey();if(apiKey&&char){try{const system=buildSystemPrompt(char,`關係剛升級到「${stageName}」，請寫一封特別的信（400~500字），情感真實，不要沒話找話，有文學感。`);const r=await callAPI(apiKey,system,[{role:'user',content:`我們的關係升級到${stageName}了。`}],700);letter=r||letter;}catch(e){}}document.getElementById('unlockLetter').textContent=letter;if(char)saveToInbox(char,letter,`✦ 關係升級：${stageName}`);}
 function closeUnlock(){document.getElementById('unlockOverlay').classList.remove('show');}
 function playUnlockAnim(){const ov=document.getElementById('unlockAnimOverlay');ov.style.display='block';ov.innerHTML='';const char=getCurrentChar();for(let i=0;i<18;i++){const p=document.createElement('div');p.className='light-particle';const s=3+Math.random()*8,c=Math.random()>.5?(char?.c1||'#a8edea'):(char?.c2||'#fed6e3');p.style.cssText=`width:${s}px;height:${s}px;background:${c};box-shadow:0 0 ${s*2}px ${c};left:${20+Math.random()*60}%;bottom:${10+Math.random()*30}%;animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.4}s;`;ov.appendChild(p);}const boat=document.createElement('div');boat.className='paper-boat';boat.textContent='✉';ov.appendChild(boat);setTimeout(()=>{ov.style.display='none';ov.innerHTML='';},3500);}
 
 // ── 上傳 ──
 function handleUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{state.uploadedB64=ev.target.result.split(',')[1];document.getElementById('preview').src=ev.target.result;document.getElementById('preview').style.display='block';document.getElementById('uploadLabel').style.display='none';addImageToGallery(ev.target.result);};r.readAsDataURL(file);}
+
+// ══════════════════════════════════════════
+// PROMPT 架構重構 — 降低 token 消耗
+// 目標：每次請求控制在 800~1200 tokens
+// ══════════════════════════════════════════
+
+// 將角色完整設定壓縮成精簡人設（限100 tokens）
+function compressCharPrompt(char){
+  const raw=(char.prompt||'').replace(/^你是[^，]+，/,'').replace(/。請用第一人稱.*$/s,'').replace(/\n\n你知道的補充資訊.*$/s,'').trim();
+  if(!raw)return '溫柔，話不多，說話帶有細膩的觀察力';
+  if(raw.length<=150)return raw;
+  // 在150字附近找句號自然截斷
+  const cut=raw.slice(0,160);
+  const lastPeriod=cut.lastIndexOf('。');
+  return lastPeriod>80?cut.slice(0,lastPeriod+1):raw.slice(0,150);
+}
+
+// 壓縮使用者資訊（限50 tokens）
+function compressUserContext(){
+  const name=document.getElementById('settingName').value.trim();
+  const hobbies=document.getElementById('settingHobbies').value.trim();
+  let ctx='';
+  if(name)ctx+=name+'，';
+  if(hobbies){const h=hobbies.split(/[，,、]/)[0].trim();ctx+=h;}// 只取第一個興趣
+  return ctx?`對方：${ctx}`:'';
+}
+
+// 建立精簡 system prompt
+function buildSystemPrompt(char,extraNote=''){
+  const personality=compressCharPrompt(char);
+  const name=document.getElementById('settingName').value.trim();
+  const knowledge=char.knowledge?`\n已知：${char.knowledge.slice(0,80)}`:'';
+  const userNote=name?`\n對方名字：${name}`:'';
+  return `你是${char.name}。${personality}\n以第一人稱寫信，繁體中文，情感真實有文學感，350~500字。${userNote}${knowledge}${extraNote?'\n'+extraNote:''}`;
+}
 
 // ── API ──
 // ── 網路搜尋開關 ──
@@ -1162,7 +1212,7 @@ function loadWebSearch(){
   try{const v=localStorage.getItem('hikari-websearch');webSearchEnabled=v==='1';document.getElementById('webSearchToggle')?.classList.toggle('on',webSearchEnabled);const label=document.getElementById('webSearchLabel');if(label)label.textContent=webSearchEnabled?'開啟':'關閉';}catch(e){}
 }
 
-async function callAPI(apiKey,system,messages,maxTokens=1000){
+async function callAPI(apiKey,system,messages,maxTokens=700){
   const bodyObj={model:'claude-sonnet-4-6',max_tokens:maxTokens,system,messages};
   if(webSearchEnabled)bodyObj.tools=[{type:'web_search_20250305',name:'web_search'}];
   const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -1186,24 +1236,23 @@ async function sendReply(){
   const char=getCurrentChar();if(!char){alert('請先選擇角色');return;}
   const aiBox=document.getElementById('aiReply'),aiText=document.getElementById('aiReplyText');
   aiBox.style.display='block';aiText.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
-  const content=[];if(state.uploadedB64)content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:state.uploadedB64}});
+  const content=[];
+  if(state.uploadedB64)content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:state.uploadedB64}});
   content.push({type:'text',text:text||'這是我最近畫的，想讓你看看。'});
-  // 偶爾讓角色提到另一個角色
+  // 偶爾提到其他角色（15%機率，不佔 system prompt）
   const others=state.chars.filter(c=>c.id!==char.id);
-  const mentionOther=others.length>0&&Math.random()<0.15;
-  const otherNote=mentionOther?`偶爾可以自然地提到你認識的${pick(others).name}，只是輕輕一提，不要刻意。`:'';
+  const otherNote=others.length>0&&Math.random()<0.15?`可輕輕提到${pick(others).name}的名字。`:'';
+  const system=buildSystemPrompt(char,otherNote);
   let reply='（他沉默地看著你的畫，很久很久。）';
   const apiKey=getApiKey();
   if(apiKey){
-    try{reply=await callAPI(apiKey,char.prompt+'\n\n'+getUserContext()+(otherNote?'\n'+otherNote:''),[{role:'user',content}],1000)||reply;}
+    try{reply=await callAPI(apiKey,system,[{role:'user',content}],700)||reply;}
     catch(e){console.error('sendReply error:',e);reply='（信送出去了，但還沒有回音……）\n\n請確認：①金鑰是否正確 ②設定頁是否有按「儲存設定」';}
-  }
-  else{reply='請先在設定裡填入 API 金鑰。';}
+  }else{reply='請先在設定裡填入 API 金鑰。';}
   aiText.textContent=reply;
   document.getElementById('letterBody').textContent=reply;
   document.getElementById('letterDate').textContent=formatDate(new Date());
   state.lastLetterDate=new Date().toISOString();
-  // 只有真正收到AI回覆才計入統計
   const isRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
   if(isRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   const pts=8+Math.floor(Math.random()*12)+(state.uploadedB64?Math.floor(Math.random()*6):0);
@@ -1231,11 +1280,12 @@ async function sendDiary(){
   if(state.selectedMood){state.moodHistory.push({date:new Date().toISOString().split('T')[0],val:state.selectedMood.val,mood:state.selectedMood.mood});if(state.moodHistory.length>30)state.moodHistory=state.moodHistory.slice(-30);renderMoodChart();}
   const rb=document.getElementById('diaryReply'),rt=document.getElementById('diaryReplyText');rb.style.display='block';rt.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
   const moodDetailText=(document.getElementById('moodDetailInput')?.value||'').trim();
-  const mCtx=state.selectedMood?`對方今天心情是「${state.selectedMood.mood}」${moodDetailText?'，補充說：'+moodDetailText:''}，在不改變個性前提下體現關心。`:'';
+  const moodNote=state.selectedMood?`心情：${state.selectedMood.mood}${moodDetailText?'（'+moodDetailText+'）':''}。`:'';
+  const system=buildSystemPrompt(char,moodNote);
   const content=[diary&&`日記：${diary}`,craft&&`創作日誌：${craft}`].filter(Boolean).join('\n');
   let reply='（他讀完了你的日記，輕輕地嗯了一聲。）';
   const apiKey=getApiKey();
-  if(apiKey){try{reply=await callAPI(apiKey,char.prompt+'\n\n'+getUserContext()+(mCtx?'\n'+mCtx:''),[{role:'user',content}])||reply;}catch(e){reply='（信送出去了，但還沒有回音……）';}}
+  if(apiKey){try{reply=await callAPI(apiKey,system,[{role:'user',content}],700)||reply;}catch(e){reply='（信送出去了，但還沒有回音……）';}}
   else reply='請先在設定裡填入 API 金鑰。';
   rt.textContent=reply;
   const isDiaryRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
@@ -1248,10 +1298,10 @@ function renderMoodChart(){const chart=document.getElementById('moodChart'),dEl=
 async function generateDream(){
   const char=getCurrentChar();if(!char){alert('請先選擇角色');return;}
   const rb=document.getElementById('dreamReply'),rt=document.getElementById('dreamReplyText');rb.style.display='block';rt.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
-  const userCtx=getUserContext();
+  const system=buildSystemPrompt(char,'請描述昨晚的夢。朦朧、碎片化、詩意，像剛醒來的語氣。可能夢到對方，也可能沒有。繁體中文，350字以內。');
   let dream='（他在夢裡看見了什麼，但說不清楚。）';
   const apiKey=getApiKey();
-  if(apiKey){try{dream=await callAPI(apiKey,`你是${char.name}，${char.prompt}。請描述你昨晚做的一個夢。夢境是朦朧的、碎片化的，有時候說不清楚發生了什麼，只記得某個畫面、某種氣味、某個聲音。夢裡有沒有出現對方？用第一人稱，像剛剛醒來還沒完全清醒時說話的語氣，帶有一點迷濛和不確定感。繁體中文，350字以內，要有詩意，不要太直白。`,[{role:'user',content:'你昨晚夢到什麼了嗎？'}],1500)||dream;}catch(e){console.error('Dream API error:',e);dream='（他在夢裡看見了什麼，但說不清楚。）';}}
+  if(apiKey){try{dream=await callAPI(apiKey,system,[{role:'user',content:'你昨晚夢到什麼了嗎？'}],800)||dream;}catch(e){console.error('Dream API error:',e);}}
   else dream='請先在設定裡填入 API 金鑰。';
   rt.textContent=dream;
   state.dreams=(state.dreams||[]);state.dreams.unshift({charId:char.id,charName:char.name,c1:char.c1,c2:char.c2,text:dream,date:new Date().toISOString()});if(state.dreams.length>30)state.dreams=state.dreams.slice(0,30);saveState();renderDreams();
