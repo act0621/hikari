@@ -454,6 +454,14 @@ body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--text-mai
 .aff-popup-label{font-size:11px;color:var(--text-muted);letter-spacing:.1em;margin-bottom:1.2rem;position:relative;z-index:1;}
 .aff-popup-close{font-size:12px;color:var(--text-soft);cursor:pointer;letter-spacing:.1em;position:relative;z-index:1;}
 
+/* 信件延遲顯示 */
+.letter-pending{border-radius:14px;padding:1rem 1.4rem;border:.5px dashed var(--paper-border);background:rgba(255,253,249,.4);margin-bottom:1rem;position:relative;overflow:hidden;display:none;}
+.letter-pending-glow{position:absolute;inset:0;border-radius:14px;opacity:.06;pointer-events:none;}
+.letter-pending-text{font-size:13px;color:var(--text-muted);line-height:1.9;}
+.letter-pending-countdown{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:var(--text-soft);margin-top:.5rem;}
+.letter-pending-unlock{font-size:11px;color:var(--text-soft);margin-top:.5rem;cursor:pointer;text-decoration:underline;display:inline-block;}
+.letter-pending-unlock:hover{color:var(--text-muted);}
+
 /* 解鎖遮罩 */
 .unlock-overlay{position:fixed;inset:0;background:rgba(58,53,48,.4);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s ease;}
 .unlock-overlay.show{opacity:1;pointer-events:all;}
@@ -530,10 +538,10 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   <div id="birthdayBanner" class="birthday-banner"></div>
   <div id="longingBanner" class="longing-banner"><div class="longing-glow" id="longingGlow"></div><span id="longingText"></span></div>
 
-  <div class="quote-box" id="quoteBox" onclick="promptTodayQuote()">
-    <div class="quote-shimmer" id="quoteShimmer"></div>
-    <div class="quote-today-text" id="quoteTodayText">點擊這裡，輸入今天想對自己說的話……</div>
-    <div class="quote-hint">今日一句 · 點擊更換</div>
+  <div class="daily-box">
+    <div class="daily-shimmer" id="dailyShimmer"></div>
+    <div class="daily-label">今日的問候</div>
+    <div class="daily-q" id="dailyQ">你最近有在創作嗎？</div>
   </div>
 
   <div class="section-label">選擇角色</div>
@@ -573,12 +581,6 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
     </div>
   </div>
 
-  <div class="daily-box">
-    <div class="daily-shimmer" id="dailyShimmer"></div>
-    <div class="daily-label">今日的問候</div>
-    <div class="daily-q" id="dailyQ">你最近有在創作嗎？</div>
-  </div>
-
   <div class="section-label">來自角色的信</div>
   <div class="paper" id="letterPaper">
     <div class="paper-glow" id="letterGlow" style="opacity:1"></div>
@@ -606,7 +608,8 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(event)"/>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:.5rem;flex-wrap:wrap">
     <button class="send-btn" onclick="sendReply()" style="margin:0">寄出 →</button>
-    <button class="full-prompt-btn" id="fullPromptBtn" onclick="toggleFullPrompt()" title="啟用後傳入完整個性設定（消耗更多token）">完整人設 OFF</button>
+    <button class="full-prompt-btn" id="fullPromptBtn" onclick="toggleFullPrompt()" title="啟用後傳入完整個性設定">完整人設 OFF</button>
+    <button class="full-prompt-btn" id="fullKnowledgeBtn" onclick="toggleFullKnowledge()" title="啟用後傳入完整補充知識">完整知識 OFF</button>
   </div>
   <div class="reply-area">
     <textarea class="reply-input" id="replyText" placeholder="或者寫點什麼給他……" rows="2"></textarea>
@@ -616,11 +619,26 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
     <div class="ai-reply-label" id="aiReplyLabel">來自 —— 的回覆</div>
     <div class="ai-reply-text" id="aiReplyText"></div>
   </div>
+
+  <!-- 延遲中的信件 -->
+  <div class="letter-pending" id="letterPending">
+    <div class="letter-pending-glow" id="letterPendingGlow"></div>
+    <div class="letter-pending-text" id="letterPendingText">信已寄出，正在路上……</div>
+    <div class="letter-pending-countdown" id="letterPendingCountdown"></div>
+    <span class="letter-pending-unlock" onclick="unlockPendingLetter()">現在就讀（跳過等待）</span>
+  </div>
 </section>
 
 <!-- ══ 日記 ══ -->
 <section class="page" id="page-diary">
   <div class="page-title">光 · 日記</div>
+
+  <div class="quote-box" id="quoteBox" onclick="promptTodayQuote()">
+    <div class="quote-shimmer" id="quoteShimmer"></div>
+    <div class="quote-today-text" id="quoteTodayText">點擊這裡，輸入今天想對自己說的話……</div>
+    <div class="quote-hint">今日一句 · 點擊更換</div>
+  </div>
+
   <div class="section-label">今天的心情</div>
   <div class="mood-row" id="moodRowMain">
     <button class="mood-btn" data-mood="創作中" data-val="5" onclick="selectMood(this)">🎨 創作中</button>
@@ -1207,12 +1225,14 @@ function compressUserContext(){
   return ctx?`對方：${ctx}`:'';
 }
 
-// 建立 system prompt（fullPrompt模式傳完整個性）
+// 建立 system prompt（fullPrompt/fullKnowledge模式）
 function buildSystemPrompt(char,extraNote=''){
   const raw=(char.prompt||'').replace(/。請用第一人稱.*$/s,'').replace(/\n\n你知道的補充資訊.*$/s,'').trim();
   const personality=fullPromptEnabled?raw:compressCharPrompt(char);
   const name=document.getElementById('settingName').value.trim();
-  const knowledge=char.knowledge?`\n已知：${char.knowledge.slice(0,80)}`:'';
+  const knowledge=char.knowledge
+    ?(fullKnowledgeEnabled?`\n已知：${char.knowledge}`:`\n已知：${char.knowledge.slice(0,80)}`)
+    :'';
   const userNote=name?`\n對方名字：${name}`:'';
   return `你是${char.name}。${personality}\n以第一人稱寫信，繁體中文，情感真實有文學感，350~500字。${userNote}${knowledge}${extraNote?'\n'+extraNote:''}`;
 }
@@ -1261,21 +1281,27 @@ async function sendReply(){
   const others=state.chars.filter(c=>c.id!==char.id);
   const otherNote=others.length>0&&Math.random()<0.15?`可輕輕提到${pick(others).name}的名字。`:'';
   const system=buildSystemPrompt(char,otherNote);
+  const city=getCharCity(char);
+  const delayMin=calcDelay(city.dist);
+  aiText.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
+  // 先生成回信（在背景）
   let reply='（他沉默地看著你的畫，很久很久。）';
   const apiKey=getApiKey();
   if(apiKey){
     try{reply=await callAPI(apiKey,system,[{role:'user',content}],700)||reply;}
     catch(e){console.error('sendReply error:',e);reply='（信送出去了，但還沒有回音……）\n\n請確認：①金鑰是否正確 ②設定頁是否有按「儲存設定」';}
   }else{reply='請先在設定裡填入 API 金鑰。';}
-  aiText.textContent=reply;
-  document.getElementById('letterBody').textContent=reply;
-  document.getElementById('letterDate').textContent=formatDate(new Date());
-  state.lastLetterDate=new Date().toISOString();
+
+  // 隱藏 loading，顯示延遲橫幅
+  aiBox.style.display='none';
+  aiText.textContent='';
+  document.getElementById('countdownText').textContent=`信已從${city.name}寄出，路上中……`;
+
   const isRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
   if(isRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   const pts=8+Math.floor(Math.random()*12)+(state.uploadedB64?Math.floor(Math.random()*6):0);
-  const sentMsg=text||'（分享了一張畫）';
-  gainAffection(pts);saveToInbox(char,reply,sentMsg,sentMsg);
+  gainAffection(pts);
+  setPendingLetter(char,reply,delayMin);
   document.getElementById('replyText').value='';state.uploadedB64=null;document.getElementById('preview').style.display='none';document.getElementById('uploadLabel').style.display='';document.getElementById('fileInput').value='';document.getElementById('longingBanner').style.display='none';saveState();renderStats();
 }
 
@@ -1453,7 +1479,95 @@ function timerSave(){if(!state.timerSeconds)return;const h=state.timerSeconds/36
 function updateTimerDisplay(){const s=state.timerSeconds,h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;document.getElementById('timerDisplay').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
 function updateTimerStats(){document.getElementById('statToday').textContent=(state.timerSavedToday||0).toFixed(1)+'h';document.getElementById('statWeek').textContent=(state.timerSavedWeek||0).toFixed(1)+'h';document.getElementById('statTotal').textContent=(state.timerTotal||0).toFixed(1)+'h';}
 
-// ── 日記 API 開關 ──
+// ══════════════════════════════════════════
+// 延遲回信系統（版本A：假延遲）
+// ══════════════════════════════════════════
+
+// 城市資料庫（隨機生成角色所在地）
+const CITIES=[
+  {name:'京都',dist:2100},{name:'首爾',dist:1960},{name:'東京',dist:2160},
+  {name:'上海',dist:690},{name:'香港',dist:811},{name:'大阪',dist:2060},
+  {name:'北京',dist:2073},{name:'倫敦',dist:9700},{name:'巴黎',dist:10200},
+  {name:'紐約',dist:12900},{name:'洛杉磯',dist:11200},{name:'雪梨',dist:7400},
+  {name:'新加坡',dist:3310},{name:'曼谷',dist:2685},{name:'維也納',dist:9600},
+];
+
+// 每個角色在不同城市（根據角色 id 固定分配）
+function getCharCity(char){
+  if(!state.charCities)state.charCities={};
+  if(!state.charCities[char.id]){
+    const city=CITIES[Math.floor(Math.random()*CITIES.length)];
+    state.charCities[char.id]=city;
+    saveState();
+  }
+  return state.charCities[char.id];
+}
+
+// 根據距離計算延遲時間（分鐘）
+function calcDelay(dist){
+  // 500km → 10分鐘，10000km → 120分鐘，線性插值
+  const min=Math.round(10+(dist/10000)*110);
+  return Math.min(min,180);// 最長180分鐘
+}
+
+// 待解鎖信件
+let pendingLetter=null;
+let pendingTimer=null;
+
+function setPendingLetter(char,reply,delayMin){
+  const unlockAt=Date.now()+delayMin*60*1000;
+  pendingLetter={charId:char.id,charName:char.name,c1:char.c1,c2:char.c2,reply,unlockAt,delayMin};
+  try{localStorage.setItem('hikari-pending',JSON.stringify(pendingLetter));}catch(e){}
+  showPendingBanner(char,reply,unlockAt);
+}
+
+function showPendingBanner(char,reply,unlockAt){
+  const banner=document.getElementById('letterPending');
+  const glow=document.getElementById('letterPendingGlow');
+  const city=getCharCity(char);
+  if(banner)banner.style.display='block';
+  if(glow)glow.style.background=`linear-gradient(135deg,${char.c1},${char.c2})`;
+  document.getElementById('letterPendingText').textContent=`信已從${city.name}寄出（距離約 ${city.dist.toLocaleString()} km）`;
+  updatePendingCountdown(unlockAt);
+  if(pendingTimer)clearInterval(pendingTimer);
+  pendingTimer=setInterval(()=>updatePendingCountdown(unlockAt),1000);
+}
+
+function updatePendingCountdown(unlockAt){
+  const remaining=unlockAt-Date.now();
+  if(remaining<=0){clearInterval(pendingTimer);unlockPendingLetter();return;}
+  const m=Math.floor(remaining/60000),s=Math.floor((remaining%60000)/1000);
+  const el=document.getElementById('letterPendingCountdown');
+  if(el)el.textContent=`預計 ${m} 分 ${s} 秒後送達……`;
+}
+
+function unlockPendingLetter(){
+  if(!pendingLetter)return;
+  clearInterval(pendingTimer);
+  const banner=document.getElementById('letterPending');
+  if(banner)banner.style.display='none';
+  // 顯示信件
+  document.getElementById('aiReply').style.display='block';
+  document.getElementById('aiReplyText').textContent=pendingLetter.reply;
+  document.getElementById('letterBody').textContent=pendingLetter.reply;
+  document.getElementById('letterDate').textContent=formatDate(new Date());
+  // 儲存到信箱
+  const char=state.chars.find(c=>c.id===pendingLetter.charId);
+  if(char)saveToInbox(char,pendingLetter.reply,'（信件送達）','');
+  try{localStorage.removeItem('hikari-pending');}catch(e){}
+  pendingLetter=null;
+}
+
+function loadPendingLetter(){
+  try{
+    const p=localStorage.getItem('hikari-pending');
+    if(!p)return;
+    pendingLetter=JSON.parse(p);
+    if(Date.now()>=pendingLetter.unlockAt){unlockPendingLetter();return;}
+    const char=state.chars.find(c=>c.id===pendingLetter.charId);
+    if(char)showPendingBanner(char,pendingLetter.reply,pendingLetter.unlockAt);
+  }catch(e){}
+}
 let diaryApiEnabled=false;
 function toggleDiaryApi(){
   diaryApiEnabled=!diaryApiEnabled;
@@ -1462,12 +1576,18 @@ function toggleDiaryApi(){
   if(label)label.textContent=diaryApiEnabled?'角色會回應':'不需要角色回應';
 }
 
-// ── 完整人設開關 ──
+// ── 完整人設 / 完整知識開關 ──
 let fullPromptEnabled=false;
+let fullKnowledgeEnabled=false;
 function toggleFullPrompt(){
   fullPromptEnabled=!fullPromptEnabled;
   const btn=document.getElementById('fullPromptBtn');
   if(btn){btn.textContent=fullPromptEnabled?'完整人設 ON':'完整人設 OFF';btn.classList.toggle('active',fullPromptEnabled);}
+}
+function toggleFullKnowledge(){
+  fullKnowledgeEnabled=!fullKnowledgeEnabled;
+  const btn=document.getElementById('fullKnowledgeBtn');
+  if(btn){btn.textContent=fullKnowledgeEnabled?'完整知識 ON':'完整知識 OFF';btn.classList.toggle('active',fullKnowledgeEnabled);}
 }
 
 // ── 願望清單（含優先度）──
@@ -1479,19 +1599,19 @@ function addWish(){
 function renderWishes(){
   const list=document.getElementById('wishList');list.innerHTML='';
   if(!state.wishes.length){list.innerHTML='<div style="font-size:12px;color:var(--text-soft);padding:.8rem 0">寫下你想畫的東西……</div>';return;}
-  // 按優先度排序：0最優先
-  const sorted=[...state.wishes].sort((a,b)=>(a.priority||1)-(b.priority||1));
-  sorted.forEach((w)=>{
-    const origIdx=state.wishes.indexOf(w);
+  // 建立含原始 index 的副本，再按優先度排序
+  const indexed=state.wishes.map((w,i)=>({...w,origIdx:i}));
+  indexed.sort((a,b)=>(a.priority??1)-(b.priority??1));
+  indexed.forEach((w)=>{
     const p=w.priority??1;
     const pClass=['p0','p1','p2'][p]||'p1';
     const pLabel=['最想','考慮','休閒'][p]||'考慮';
     const item=document.createElement('div');item.className='wish-item';
     item.innerHTML=`
-      <div class="wish-priority ${pClass}" onclick="cyclePriority(${origIdx})" title="點擊切換優先度">${p}</div>
-      <div class="wish-check${w.done?' done':''}" onclick="toggleWish(${origIdx})">${w.done?'✓':''}</div>
-      <div class="wish-text${w.done?' done':''}" style="flex:1">${w.text}<span style="font-size:10px;color:var(--text-soft);margin-left:6px">${pLabel}</span></div>
-      <div class="wish-del" onclick="delWish(${origIdx})">×</div>`;
+      <div class="wish-priority ${pClass}" onclick="cyclePriority(${w.origIdx})" title="點擊切換優先度">${p}</div>
+      <div class="wish-check${w.done?' done':''}" onclick="toggleWish(${w.origIdx})">${w.done?'✓':''}</div>
+      <div class="wish-text${w.done?' done':''}">${w.text}<span style="font-size:10px;color:var(--text-soft);margin-left:6px">${pLabel}</span></div>
+      <div class="wish-del" onclick="delWish(${w.origIdx})">×</div>`;
     list.appendChild(item);
   });
 }
