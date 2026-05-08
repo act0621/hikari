@@ -344,6 +344,17 @@ body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--text-mai
 .inbox-detail-gaze{font-size:11px;color:rgba(160,148,136,.4);text-align:right;margin-top:.3rem;letter-spacing:.07em;}
 .inbox-detail-close{font-size:12px;color:var(--text-soft);cursor:pointer;letter-spacing:.1em;margin-top:1.5rem;display:inline-block;}
 
+
+/* 畫信合一 */
+.gallery-book-item{border-radius:16px;border:.5px solid var(--paper-border);background:var(--paper);overflow:hidden;margin-bottom:1.2rem;position:relative;}
+.gallery-book-img{width:100%;max-height:320px;object-fit:cover;display:block;}
+.gallery-book-letter{padding:1.2rem 1.4rem;position:relative;}
+.gallery-book-glow{position:absolute;inset:0;opacity:.08;pointer-events:none;}
+.gallery-book-from{font-size:10px;letter-spacing:.15em;color:var(--text-soft);text-transform:uppercase;margin-bottom:.6rem;position:relative;z-index:1;}
+.gallery-book-body{font-size:13px;line-height:2;color:#5a5248;white-space:pre-wrap;position:relative;z-index:1;}
+.gallery-book-date{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:#c8c0b8;text-align:right;margin-top:.8rem;position:relative;z-index:1;}
+.gallery-book-no-letter{font-size:12px;color:var(--text-soft);padding:1rem 1.4rem;font-style:italic;}
+
 /* ── 聊天室 ── */
 .chat-bubble-btn{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#a8edea,#fed6e3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:500;transition:all .3s ease;-webkit-tap-highlight-color:transparent;}
 .chat-bubble-btn:hover{transform:scale(1.08);}
@@ -728,8 +739,14 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
 <!-- ══ 畫作 ══ -->
 <section class="page" id="page-gallery">
   <div class="page-title">光 · 畫作</div>
-  <div class="section-label">你分享過的畫</div>
-  <div class="gallery-grid" id="galleryGrid"></div>
+  <div style="display:flex;gap:8px;margin-bottom:1rem">
+    <button class="relation-btn active" id="galleryTabGrid" onclick="setGalleryTab('grid')">畫作</button>
+    <button class="relation-btn" id="galleryTabBook" onclick="setGalleryTab('book')">畫信合一</button>
+  </div>
+  <div id="galleryGridWrap">
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
+  <div id="galleryBookWrap" style="display:none"></div>
   <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="addToGallery(event)"/>
 </section>
 
@@ -854,24 +871,31 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   </div>
 
   <div class="paper">
-    <div class="section-label">☁️ GitHub 雲端同步</div>
-    <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">填入後，所有資料會自動儲存到你的 GitHub，換裝置或重開瀏覽器都不會消失。</div>
-    <div class="setting-row"><div class="setting-label">GitHub Token</div><input class="setting-input" id="settingGhToken" type="password" placeholder="ghp_…"/><div class="api-note">Token 只存在瀏覽器本地，不會上傳到任何地方。</div></div>
-    <div style="display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap">
-      <button class="io-btn" onclick="syncToGitHub()">☁️ 立即儲存到 GitHub</button>
-      <button class="io-btn" onclick="syncFromGitHub()">🔄 從 GitHub 讀取資料</button>
-    </div>
-    <div style="font-size:12px;margin-top:.6rem" id="syncStatus"></div>
+    <div class="section-label">角色記憶</div>
+    <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">每次寄信後自動萃取，角色會記住你說過的事。</div>
+    <div id="memoryViewer" style="margin-bottom:.8rem"></div>
+    <button class="io-btn" onclick="renderMemoryViewer()" style="margin-right:8px">🧠 查看記憶</button>
+    <button class="io-btn" onclick="if(confirm('確定清除所有角色記憶？'))clearAllMemories()" style="color:rgba(200,80,80,.6);border-color:rgba(200,80,80,.2)">清除記憶</button>
   </div>
 
   <div class="paper">
-    <div class="section-label">匯出 / 匯入資料</div>
-    <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">匯出會下載一個 JSON 檔案，備份你的所有資料。匯入時選擇該檔案即可還原。</div>
-    <div class="io-row">
-      <button class="io-btn" onclick="exportData()">📤 匯出備份</button>
-      <button class="io-btn" onclick="document.getElementById('importInput').click()">📥 匯入備份</button>
+    <div class="section-label">備份資料（iOS 友善）</div>
+    <div style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-bottom:.8rem">
+      產生備份碼，複製後貼到備忘錄儲存。還原時貼回即可，不需要下載檔案。<br>
+      <span style="color:rgba(200,80,80,.5)">注意：圖片不包含在備份碼中（檔案太大），其他所有資料都包含。</span>
+    </div>
+    <div class="io-row" style="flex-wrap:wrap;gap:8px">
+      <button class="io-btn" onclick="exportAsCode()">📋 產生備份碼</button>
+      <button class="io-btn" onclick="importFromCode()">📥 還原備份碼</button>
+      <button class="io-btn" onclick="exportData()">📤 匯出 JSON（電腦用）</button>
+      <button class="io-btn" onclick="document.getElementById('importInput').click()">📥 匯入 JSON（電腦用）</button>
+    </div>
+    <div id="backupCodeArea" style="display:none;margin-top:.8rem">
+      <textarea id="backupCodeText" style="width:100%;height:80px;background:rgba(255,252,248,.6);border:.5px solid var(--paper-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text-muted);resize:none;font-family:monospace;outline:none" readonly></textarea>
+      <button class="io-btn" onclick="copyBackupCode()" style="margin-top:6px">複製備份碼</button>
     </div>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)"/>
+  </div>
   </div>
   <button class="save-btn" onclick="saveSettings()">儲存設定</button>
   <div class="save-msg" id="saveMsg">已儲存 ✓</div>
@@ -946,6 +970,7 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   </div>
 </div>
 
+
 <!-- 角色 Modal -->
 <div class="modal-overlay" id="charModal" onclick="closeCharModal()">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -962,7 +987,10 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
       <div class="emoji-row" id="emojiRow"></div>
     </div>
     <div class="modal-row"><div class="modal-label">螢光色調</div><div class="neon-presets" id="neonPresets"></div><div class="custom-color-row"><div class="color-input-pair"><div class="color-input-label">A</div><input type="color" id="mColor1" value="#a8edea" oninput="updateColorPreview()"/></div><div class="color-input-pair"><div class="color-input-label">B</div><input type="color" id="mColor2" value="#fed6e3" oninput="updateColorPreview()"/></div></div><div class="color-preview-bar" id="colorPreviewBar"></div></div>
-    <div class="modal-row"><div class="modal-label">個性 / 說話方式</div><textarea class="modal-textarea" id="mPrompt" placeholder="溫柔話少，說話簡短……"></textarea></div>
+    <div class="modal-row">
+      <div class="modal-label">個性 / 說話方式</div>
+      <textarea class="modal-textarea" id="mPrompt" placeholder="溫柔話少，說話簡短……"></textarea>
+    </div>
     <div class="modal-row"><div class="modal-label">補充知識（讓他知道的事，例如最近的新歌、活動）</div><textarea class="modal-textarea" id="mKnowledge" placeholder="例如：PLAVE最近發行了新歌〇〇〇，歌詞描述了……&#10;戀與深空最近新增了劇情……"></textarea></div>
     <div class="modal-row"><div class="modal-label">輕語語錄（每行一句）</div><textarea class="modal-textarea" id="mWhispers" placeholder="你知道的。&#10;謝謝你把這個給我看。&#10;……我在聽。"></textarea></div>
     <div class="modal-row"><div class="modal-label">生日 MM-DD</div><input class="modal-input" id="mBirthday" placeholder="10-16"/></div>
@@ -1030,85 +1058,66 @@ function init(){
   if(!state.currentCharId&&state.chars.length)state.currentCharId=state.chars[0].id;
   setSeason();setDailyQuestion();setLetterDate();loadTheme();loadWebSearch();
   renderChars();applyCharTheme();updateAffBar();renderMoodChart();
-  checkBirthday();checkLonging();buildNeonPresets();buildEmojiPicker();loadSettingsUI();
+  checkBirthday();checkLonging();checkFestival();buildNeonPresets();buildEmojiPicker();loadSettingsUI();
   renderWishes();renderQuotes();renderQuoteCharSel();renderInspo();renderDreams();
   updateWorldState();updateTimerStats();setTodayQuote();refreshDrift();renderStats();renderInboxSlider();
   setTimeout(initRelationCanvas,300);loadPendingLetter();
-  setInterval(updateWorldState,30*60*1000);setInterval(checkLonging,60*60*1000);
+  setInterval(updateWorldState,30*60*1000);
 }
 
-// ── GitHub 雲端同步 ──
-const GH_OWNER='act0621';
-const GH_REPO='hikari';
-const GH_FILE='hikari-data.json';
 
-function getGhToken(){return document.getElementById('settingGhToken')?.value.trim()||'';}
-
-function setSyncStatus(msg,color='var(--text-soft)'){
-  const el=document.getElementById('syncStatus');
-  if(el){el.textContent=msg;el.style.color=color;}
+// ── 備份系統（iOS 友善）──
+function saveState(){try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}}
+function loadState(){try{const s=localStorage.getItem('hikari-v4');if(s)Object.assign(state,JSON.parse(s));}catch(e){}}
+function loadSettingsUI(){
+  try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);document.getElementById('settingName').value=d.name||'';document.getElementById('settingHobbies').value=d.hobbies||'';document.getElementById('settingAbout').value=d.about||'';document.getElementById('settingApiKey').value=d.apiKey||'';}}catch(e){}
 }
+function saveSettings(){
+  const s={name:document.getElementById('settingName').value,hobbies:document.getElementById('settingHobbies').value,about:document.getElementById('settingAbout').value,apiKey:document.getElementById('settingApiKey').value};
+  try{localStorage.setItem('hikari-settings',JSON.stringify(s));}catch(e){}
+  const m=document.getElementById('saveMsg');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
+}
+function getApiKey(){return document.getElementById('settingApiKey').value.trim();}
+function getUserContext(){const n=document.getElementById('settingName').value.trim(),h=document.getElementById('settingHobbies').value.trim();let c='';if(n)c+=`對方名字是${n}。`;if(h)c+=`興趣：${h.split(/[，,、]/)[0].trim()}。`;return c;}
+function getCurrentChar(){return state.chars.find(c=>c.id===state.currentCharId);}
 
-async function syncToGitHub(){
-  const token=getGhToken();
-  if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
-  setSyncStatus('儲存中……');
+// 產生備份碼（排除圖片資料，避免太長）
+function exportAsCode(){
+  const slim={...state};
+  // 移除圖片資料（base64 太長）
+  slim.gallery=[];
+  slim.inbox=slim.inbox.map(i=>({...i,imgSrc:null}));
+  slim.chars=slim.chars.map(c=>({...c,avatarImg:null}));
   try{
-    let sha=null;
-    try{const r=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});if(r.ok){const d=await r.json();sha=d.sha;}}catch(e){}
-
-    // 用 TextEncoder 正確處理中文
-    const jsonStr=JSON.stringify(state);
-    const bytes=new TextEncoder().encode(jsonStr);
-    let binary='';
-    bytes.forEach(b=>binary+=String.fromCharCode(b));
-    const content=btoa(binary);
-
-    const body={message:'光：自動同步 '+new Date().toLocaleString('zh-TW'),content};
-    if(sha)body.sha=sha;
-
-    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{
-      method:'PUT',
-      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
-    if(res.ok){setSyncStatus('✓ 已儲存到 GitHub · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');}
-    else{const err=await res.json().catch(()=>({}));setSyncStatus('儲存失敗：'+(err.message||res.status),'rgba(200,80,80,.7)');}
-  }catch(e){setSyncStatus('錯誤：'+e.message,'rgba(200,80,80,.7)');}
+    const json=JSON.stringify(slim);
+    const bytes=new TextEncoder().encode(json);
+    let binary='';bytes.forEach(b=>binary+=String.fromCharCode(b));
+    const code='HIKARI:'+btoa(binary);
+    const area=document.getElementById('backupCodeArea');
+    const text=document.getElementById('backupCodeText');
+    if(area)area.style.display='block';
+    if(text)text.value=code;
+  }catch(e){alert('產生失敗：'+e.message);}
 }
-
-async function syncFromGitHub(){
-  const token=getGhToken();
-  if(!token){setSyncStatus('請先填入 GitHub Token','rgba(200,80,80,.7)');return;}
-  setSyncStatus('讀取中……');
+function copyBackupCode(){
+  const text=document.getElementById('backupCodeText');
+  if(!text)return;
+  if(navigator.clipboard){navigator.clipboard.writeText(text.value).then(()=>alert('已複製！貼到備忘錄儲存即可。'));}
+  else{text.select();document.execCommand('copy');alert('已複製！');}
+}
+function importFromCode(){
+  const code=prompt('請貼上備份碼（HIKARI: 開頭）：');
+  if(!code||!code.startsWith('HIKARI:'))return alert('格式不對，請確認備份碼完整。');
   try{
-    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
-    if(!res.ok){setSyncStatus('找不到雲端資料，請先儲存一次','rgba(200,80,80,.7)');return;}
-    const d=await res.json();
-
-    // 用 TextDecoder 正確解碼中文
-    const binary=atob(d.content.replace(/\n/g,''));
+    const b64=code.slice(7);
+    const binary=atob(b64);
     const bytes=new Uint8Array(binary.length);
     for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-    const jsonStr=new TextDecoder().decode(bytes);
-    const json=JSON.parse(jsonStr);
-
-    Object.assign(state,json);
-    saveState();init();
-    setSyncStatus('✓ 已讀取 · '+new Date().toLocaleTimeString('zh-TW'),'rgba(80,160,120,.9)');
-  }catch(e){setSyncStatus('讀取失敗：'+e.message,'rgba(200,80,80,.7)');}
+    const json=new TextDecoder().decode(bytes);
+    const data=JSON.parse(json);
+    Object.assign(state,data);saveState();init();alert('還原成功！');
+  }catch(e){alert('還原失敗：'+e.message);}
 }
-
-// 每次 saveState 只存 localStorage，手動按才同步 GitHub
-function saveState(){
-  try{localStorage.setItem('hikari-v4',JSON.stringify(state));}catch(e){}
-}
-function loadState(){try{const s=localStorage.getItem('hikari-v4');if(s)Object.assign(state,JSON.parse(s));}catch(e){}}
-function loadSettingsUI(){try{const s=localStorage.getItem('hikari-settings');if(s){const d=JSON.parse(s);document.getElementById('settingName').value=d.name||'';document.getElementById('settingHobbies').value=d.hobbies||'';document.getElementById('settingAbout').value=d.about||'';document.getElementById('settingApiKey').value=d.apiKey||'';if(document.getElementById('settingGhToken'))document.getElementById('settingGhToken').value=d.ghToken||'';}}catch(e){}}
-function saveSettings(){const s={name:document.getElementById('settingName').value,hobbies:document.getElementById('settingHobbies').value,about:document.getElementById('settingAbout').value,apiKey:document.getElementById('settingApiKey').value,ghToken:document.getElementById('settingGhToken')?.value||''};try{localStorage.setItem('hikari-settings',JSON.stringify(s));}catch(e){}const m=document.getElementById('saveMsg');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
-function getApiKey(){return document.getElementById('settingApiKey').value.trim();}
-function getUserContext(){const n=document.getElementById('settingName').value.trim(),h=document.getElementById('settingHobbies').value.trim(),a=document.getElementById('settingAbout').value.trim();let c='';if(n)c+=`對方名字是${n}。`;if(h)c+=`興趣：${h}。`;if(a)c+=`關於她：${a}。`;return c;}
-function getCurrentChar(){return state.chars.find(c=>c.id===state.currentCharId);}
 
 // ══════════════════════════════════════════
 // 聊天室系統
@@ -1243,6 +1252,19 @@ async function sendChat(){
   // 好感值小幅提升
   gainAffection(2+Math.floor(Math.random()*3));
 }
+function renderMemoryViewer(){
+  const el=document.getElementById('memoryViewer');if(!el)return;
+  if(!state.charMemories||!Object.keys(state.charMemories).length){el.innerHTML='<div style="font-size:12px;color:var(--text-soft)">還沒有任何記憶……</div>';return;}
+  el.innerHTML='';
+  state.chars.forEach(char=>{
+    const mems=state.charMemories?.[char.id];if(!mems||!mems.length)return;
+    const section=document.createElement('div');section.style.cssText='margin-bottom:.8rem';
+    section.innerHTML=`<div style="font-size:11px;color:var(--text-muted);letter-spacing:.1em;margin-bottom:.4rem">${char.emoji} ${char.name}</div>`;
+    mems.forEach(m=>{const tag=document.createElement('div');tag.style.cssText='font-size:12px;color:#5a5248;padding:.3rem .6rem;background:rgba(168,237,234,.1);border-radius:6px;margin-bottom:4px;border:.5px solid rgba(168,237,234,.2)';tag.textContent=m;section.appendChild(tag);});
+    el.appendChild(section);
+  });
+}
+function clearAllMemories(){state.charMemories={};saveState();renderMemoryViewer();alert('記憶已清除');}
 function setTheme(theme){
   document.body.classList.remove('theme-dark','theme-light');
   if(theme==='dark')document.body.classList.add('theme-dark');
@@ -1303,12 +1325,66 @@ function updateWorldState(){
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
 // ── 孤單提醒 ──
+// ── 孤單提醒 + 主動留言系統 ──
+// 改為每次開啟網站時檢查，不依賴 setInterval
 function checkLonging(){
-  const char=getCurrentChar();if(!char||!state.lastLetterDate)return;
-  const days=(Date.now()-new Date(state.lastLetterDate).getTime())/(864e5);
+  const char=getCurrentChar();if(!char)return;
   const b=document.getElementById('longingBanner');
-  if(days>=3){const msgs=[`${char.name}好像有一點點想你了……好久沒收到你的消息。`,`你還好嗎？${char.name}的桌上還放著你上次分享的那張畫。`,`${char.name}沒有催你的意思，只是……有點想知道你最近怎麼樣。`];document.getElementById('longingText').textContent=pick(msgs);document.getElementById('longingGlow').style.background=`linear-gradient(135deg,${char.c1},${char.c2})`;b.style.display='block';}
-  else b.style.display='none';
+
+  // 孤單提醒：3天沒寄信
+  if(state.lastLetterDate){
+    const days=(Date.now()-new Date(state.lastLetterDate).getTime())/(864e5);
+    if(days>=3){
+      const msgs=[
+        `${char.name}好像有一點點想你了……好久沒收到你的消息。`,
+        `你還好嗎？${char.name}的桌上還放著你上次分享的那張畫。`,
+        `${char.name}沒有催你的意思，只是……有點想知道你最近怎麼樣。`,
+        `已經好幾天了。${char.name}沒有特別要說什麼，只是想讓你知道他在。`,
+      ];
+      document.getElementById('longingText').textContent=pick(msgs);
+      document.getElementById('longingGlow').style.background=`linear-gradient(135deg,${char.c1},${char.c2})`;
+      b.style.display='block';
+    }else{
+      b.style.display='none';
+    }
+  }
+
+  // 主動留言：檢查是否到了該留言的時間
+  checkProactiveMessage(char);
+}
+
+async function checkProactiveMessage(char){
+  if(!state.proactive)state.proactive={};
+  const today=new Date().toISOString().split('T')[0];
+  const key=`${char.id}_${today}`;
+
+  // 每個角色每天最多主動留言一次，且有 30% 機率觸發
+  if(state.proactive[key])return;
+  if(Math.random()>0.3)return;// 70% 機率不觸發，保持稀有感
+
+  // 標記今天已檢查（不管有沒有留言）
+  state.proactive[key]=true;
+  saveState();
+
+  const apiKey=getApiKey();if(!apiKey)return;
+
+  try{
+    const system=buildSystemPrompt(char,'請主動留下一句簡短的話（20~40字），像是突然想到什麼、或想起對方，語氣自然，不要太刻意。不用問候，就像傳一則訊息一樣。');
+    const reply=await callAPI(apiKey,system,[{role:'user',content:'（主動留言）'}],100);
+    if(!reply)return;
+
+    // 顯示在孤單提醒橫幅旁（用不同樣式）
+    showProactiveMessage(char,reply);
+    // 存進信箱
+    saveToInbox(char,reply,'✦ 主動留言','');
+  }catch(e){}
+}
+
+function showProactiveMessage(char,msg){
+  const b=document.getElementById('longingBanner');
+  document.getElementById('longingText').textContent=msg;
+  document.getElementById('longingGlow').style.background=`linear-gradient(135deg,${char.c1},${char.c2})`;
+  b.style.display='block';
 }
 
 // ── 渲染角色 ──
@@ -1392,7 +1468,8 @@ function closeUnlock(){document.getElementById('unlockOverlay').classList.remove
 function playUnlockAnim(){const ov=document.getElementById('unlockAnimOverlay');ov.style.display='block';ov.innerHTML='';const char=getCurrentChar();for(let i=0;i<18;i++){const p=document.createElement('div');p.className='light-particle';const s=3+Math.random()*8,c=Math.random()>.5?(char?.c1||'#a8edea'):(char?.c2||'#fed6e3');p.style.cssText=`width:${s}px;height:${s}px;background:${c};box-shadow:0 0 ${s*2}px ${c};left:${20+Math.random()*60}%;bottom:${10+Math.random()*30}%;animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.4}s;`;ov.appendChild(p);}const boat=document.createElement('div');boat.className='paper-boat';boat.textContent='✉';ov.appendChild(boat);setTimeout(()=>{ov.style.display='none';ov.innerHTML='';},3500);}
 
 // ── 上傳 ──
-function handleUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{state.uploadedB64=ev.target.result.split(',')[1];document.getElementById('preview').src=ev.target.result;document.getElementById('preview').style.display='block';document.getElementById('uploadLabel').style.display='none';addImageToGallery(ev.target.result);};r.readAsDataURL(file);}
+let lastUploadedSrc=null;
+function handleUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{state.uploadedB64=ev.target.result.split(',')[1];lastUploadedSrc=ev.target.result;document.getElementById('preview').src=ev.target.result;document.getElementById('preview').style.display='block';document.getElementById('uploadLabel').style.display='none';addImageToGallery(ev.target.result);};r.readAsDataURL(file);}
 
 // ══════════════════════════════════════════
 // PROMPT 架構重構 — 降低 token 消耗
@@ -1420,7 +1497,113 @@ function compressUserContext(){
   return ctx?`對方：${ctx}`:'';
 }
 
-// 建立 system prompt（fullPrompt/fullKnowledge模式）
+// ── 台灣節慶信 ──
+const TW_FESTIVALS=[
+  {name:'元旦',mmdd:'01-01',prompt:'今天是新年第一天，請以角色身份寫一封跨年問候信，帶入新年的感受和對對方的期待。'},
+  {name:'情人節',mmdd:'02-14',prompt:'今天是情人節，請以角色身份寫一封帶有曖昧和溫柔的信，不要太直白，保持角色的個性。'},
+  {name:'白色情人節',mmdd:'03-14',prompt:'今天是白色情人節，請以角色身份寫一封回應情感的信，語氣溫柔含蓄。'},
+  {name:'母親節',mmdd:'05-12',prompt:'今天是母親節，請以角色身份寫一封問候的信，可以提到珍惜身邊的人這個主題。'},
+  {name:'端午節',mmdd:'06-10',prompt:'今天是端午節，請以角色身份寫一封帶有節日氣息的信，提到粽子或划龍舟也可以。'},
+  {name:'七夕',mmdd:'08-07',prompt:'今天是七夕，請以角色身份寫一封帶有深情和浪漫的信，可以提到牛郎織女的意象。'},
+  {name:'中秋節',mmdd:'09-29',prompt:'今天是中秋節，請以角色身份寫一封賞月的信，帶有節日的溫暖和團圓的感受。'},
+  {name:'聖誕節',mmdd:'12-25',prompt:'今天是聖誕節，請以角色身份寫一封溫暖的聖誕信，帶有節日的溫馨感。'},
+  {name:'跨年夜',mmdd:'12-31',prompt:'今天是跨年夜，請以角色身份寫一封回顧這一年、期待新年的信，情感真實深刻。'},
+];
+
+function checkFestival(){
+  const today=new Date();
+  const mmdd=String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  const festival=TW_FESTIVALS.find(f=>f.mmdd===mmdd);
+  if(!festival)return;
+
+  // 檢查今天是否已發過節慶信
+  if(!state.festivalSent)state.festivalSent={};
+  const year=today.getFullYear();
+  const key=`${year}-${festival.mmdd}`;
+  if(state.festivalSent[key])return;
+
+  // 延遲3秒後觸發（讓頁面先載入完）
+  setTimeout(()=>sendFestivalLetter(festival,key),3000);
+}
+
+async function sendFestivalLetter(festival,key){
+  const char=getCurrentChar();if(!char)return;
+  const apiKey=getApiKey();if(!apiKey)return;
+
+  try{
+    const system=buildSystemPrompt(char,`${festival.prompt}350~500字，情感真實，有文學感。`);
+    const reply=await callAPI(apiKey,system,[{role:'user',content:`今天是${festival.name}。`}],700);
+    if(!reply)return;
+
+    // 標記已發送
+    state.festivalSent[key]=true;
+
+    // 顯示特別橫幅
+    const banner=document.getElementById('longingBanner');
+    document.getElementById('longingText').textContent=`🎊 ${festival.name}快樂！${char.name}寄來了一封節慶信。`;
+    document.getElementById('longingGlow').style.background=`linear-gradient(135deg,${char.c1},${char.c2})`;
+    if(banner)banner.style.display='block';
+
+    // 存進信箱
+    saveToInbox(char,reply,`🎊 ${festival.name}節慶信`,'');
+    saveState();
+  }catch(e){}
+}
+// 分析近7天心情，生成給 AI 的情緒摘要
+function analyzeRecentMood(){
+  const recent=state.moodHistory.slice(-7);
+  if(recent.length<2)return'';
+  const avg=recent.reduce((s,m)=>s+(m.val||3),0)/recent.length;
+  const last3=recent.slice(-3);
+  const last3Avg=last3.reduce((s,m)=>s+(m.val||3),0)/last3.length;
+  const moods=recent.map(m=>m.mood).filter(Boolean);
+  const lowCount=recent.filter(m=>m.val<=2).length;
+  const highCount=recent.filter(m=>m.val>=4).length;
+
+  let note='';
+  if(lowCount>=3)note=`對方最近${lowCount}天情緒低落（${moods.slice(-3).join('、')}），請在不改變個性的前提下，自然地給予溫柔關心，不要說教。`;
+  else if(last3Avg<avg-0.8)note=`對方近幾天情緒比之前低，請稍微多一點陪伴感。`;
+  else if(highCount>=3)note=`對方最近狀態不錯（${moods.slice(-3).join('、')}），可以稍微輕鬆自然一點。`;
+  return note;
+}
+
+// ── 記憶系統 ──
+// 每個角色最多保留10條記憶，每條不超過30字
+function getCharMemories(charId){
+  if(!state.charMemories)state.charMemories={};
+  return state.charMemories[charId]||[];
+}
+function saveCharMemory(charId,memory){
+  if(!state.charMemories)state.charMemories={};
+  if(!state.charMemories[charId])state.charMemories[charId]=[];
+  state.charMemories[charId].unshift(memory);
+  // 只保留最近10條
+  if(state.charMemories[charId].length>10)
+    state.charMemories[charId]=state.charMemories[charId].slice(0,10);
+  saveState();
+}
+// 萃取記憶（用 API）
+async function extractMemory(charId,userText,charReply){
+  const apiKey=getApiKey();if(!apiKey)return;
+  if(!userText||userText.startsWith('（'))return;
+  try{
+    const res=await callAPI(apiKey,
+      '你是一個記憶萃取助手。從以下對話中，萃取1~2條值得記住的關鍵資訊（關於對方的事、她提到的作品、她的狀態），每條不超過20字，用繁體中文條列。只輸出條列內容，不要其他文字。',
+      [{role:'user',content:`使用者說：${userText.slice(0,200)}\n角色回覆：${charReply.slice(0,100)}`}],
+      150
+    );
+    if(!res)return;
+    // 解析條列
+    const lines=res.split('\n').map(l=>l.replace(/^[-•·\d.]\s*/,'')).filter(l=>l.length>2&&l.length<=30);
+    lines.forEach(l=>saveCharMemory(charId,l));
+  }catch(e){}
+}
+// 取得角色記憶摘要（注入 prompt 用）
+function getMemoryNote(charId){
+  const mems=getCharMemories(charId);
+  if(!mems.length)return'';
+  return`\n你記得關於她的事：${mems.slice(0,5).join('、')}`;
+}
 function buildSystemPrompt(char,extraNote=''){
   const raw=(char.prompt||'').replace(/。請用第一人稱.*$/s,'').replace(/\n\n你知道的補充資訊.*$/s,'').trim();
   const personality=fullPromptEnabled?raw:compressCharPrompt(char);
@@ -1429,7 +1612,9 @@ function buildSystemPrompt(char,extraNote=''){
     ?(fullKnowledgeEnabled?`\n已知：${char.knowledge}`:`\n已知：${char.knowledge.slice(0,80)}`)
     :'';
   const userNote=name?`\n對方名字：${name}`:'';
-  return `你是${char.name}。${personality}\n以第一人稱寫信，繁體中文，情感真實有文學感，350~500字。${userNote}${knowledge}${extraNote?'\n'+extraNote:''}`;
+  const moodNote=analyzeRecentMood();
+  const memNote=getMemoryNote(char.id);
+  return `你是${char.name}。${personality}\n以第一人稱寫信，繁體中文，情感真實有文學感，350~500字。${userNote}${knowledge}${memNote}${moodNote?'\n'+moodNote:''}${extraNote?'\n'+extraNote:''}`;
 }
 
 // ── API ──
@@ -1496,7 +1681,10 @@ async function sendReply(){
   if(isRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
   const pts=8+Math.floor(Math.random()*12)+(state.uploadedB64?Math.floor(Math.random()*6):0);
   gainAffection(pts);
-  setPendingLetter(char,reply,delayMin);
+  setPendingLetter(char,reply,delayMin,lastUploadedSrc);
+  // 萃取記憶（非同步，不阻塞）
+  if(isRealReply&&text)extractMemory(char.id,text,reply).catch(()=>{});
+  lastUploadedSrc=null;
   document.getElementById('replyText').value='';state.uploadedB64=null;document.getElementById('preview').style.display='none';document.getElementById('uploadLabel').style.display='';document.getElementById('fileInput').value='';document.getElementById('longingBanner').style.display='none';saveState();renderStats();
 }
 
@@ -1535,7 +1723,11 @@ async function sendDiary(){
   rt.textContent=reply;
   const isDiaryRealReply=apiKey&&reply&&!reply.startsWith('請先在設定')&&!reply.startsWith('（信送出去了');
   if(isDiaryRealReply){state.totalLetters=(state.totalLetters||0)+1;state.totalWords=(state.totalWords||0)+reply.length;}
-  gainAffection(5+Math.floor(Math.random()*8));saveToInbox(char,reply,content.slice(0,40)+'……',content);state.lastLetterDate=new Date().toISOString();saveState();renderStats();
+  gainAffection(5+Math.floor(Math.random()*8));
+  saveToInbox(char,reply,content.slice(0,40)+'……',content);
+  state.lastLetterDate=new Date().toISOString();
+  if(isDiaryRealReply&&content)extractMemory(char.id,content,reply).catch(()=>{});
+  saveState();renderStats();
 }
 function renderMoodChart(){const chart=document.getElementById('moodChart'),dEl=document.getElementById('chartDays');chart.innerHTML='';dEl.innerHTML='';const char=getCurrentChar();const c1=char?.c1||'#a8edea',c2=char?.c2||'#fed6e3';Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));const key=d.toISOString().split('T')[0];const entry=state.moodHistory.slice().reverse().find(m=>m.date===key);const bar=document.createElement('div');bar.className='chart-bar';bar.style.height=((entry?.val||0)*16)+'px';bar.style.background=`linear-gradient(to top,${c1},${c2})`;bar.title=entry?entry.mood:'無記錄';chart.appendChild(bar);const label=document.createElement('div');label.className='chart-day';label.textContent=(d.getMonth()+1)+'/'+d.getDate();dEl.appendChild(label);});}
 
@@ -1586,10 +1778,50 @@ function renderInboxFilter(){
   });
 }
 
-function saveToInbox(char,body,preview,sentMsg=''){
-  state.inbox.unshift({id:'inbox_'+Date.now(),charId:char.id,charName:char.name,c1:char.c1,c2:char.c2,body,preview,sentMsg,date:new Date().toISOString(),gazeSeconds:0});
+function saveToInbox(char,body,preview,sentMsg='',imgSrc=null){
+  state.inbox.unshift({id:'inbox_'+Date.now(),charId:char.id,charName:char.name,c1:char.c1,c2:char.c2,body,preview,sentMsg,imgSrc,date:new Date().toISOString(),gazeSeconds:0});
   if(state.inbox.length>80)state.inbox=state.inbox.slice(0,80);
   saveState();renderInboxSlider();
+}
+
+// ── 畫信合一 ──
+let galleryTab='grid';
+function setGalleryTab(tab){
+  galleryTab=tab;
+  document.getElementById('galleryTabGrid')?.classList.toggle('active',tab==='grid');
+  document.getElementById('galleryTabBook')?.classList.toggle('active',tab==='book');
+  document.getElementById('galleryGridWrap').style.display=tab==='grid'?'':'none';
+  document.getElementById('galleryBookWrap').style.display=tab==='book'?'':'none';
+  if(tab==='book')renderGalleryBook();
+  if(tab==='grid')renderGallery();
+}
+function renderGalleryBook(){
+  const wrap=document.getElementById('galleryBookWrap');if(!wrap)return;
+  wrap.innerHTML='';
+  // 找有附圖的信件
+  const withImg=state.inbox.filter(i=>i.imgSrc&&i.body&&!i.body.startsWith('（今天'));
+  if(!withImg.length){
+    // 也顯示沒有對應信件的畫
+    if(!state.gallery.length){wrap.innerHTML='<div style="font-size:12px;color:var(--text-soft)">還沒有任何畫作……</div>';return;}
+    state.gallery.forEach(src=>{
+      const el=document.createElement('div');el.className='gallery-book-item';
+      el.innerHTML=`<img class="gallery-book-img" src="${src}"/><div class="gallery-book-no-letter">這張畫還沒有對應的信件。</div>`;
+      wrap.appendChild(el);
+    });
+    return;
+  }
+  withImg.forEach(item=>{
+    const el=document.createElement('div');el.className='gallery-book-item';
+    el.innerHTML=`
+      <img class="gallery-book-img" src="${item.imgSrc}"/>
+      <div class="gallery-book-letter">
+        <div class="gallery-book-glow" style="background:linear-gradient(135deg,${item.c1},${item.c2})"></div>
+        <div class="gallery-book-from">來自 ${item.charName}</div>
+        <div class="gallery-book-body">${item.body}</div>
+        <div class="gallery-book-date">${formatDate(new Date(item.date))}</div>
+      </div>`;
+    wrap.appendChild(el);
+  });
 }
 
 function renderInbox(){
@@ -1709,9 +1941,9 @@ function getCharCity(char){
 let pendingLetter=null;
 let pendingTimer=null;
 
-function setPendingLetter(char,reply,delayMin){
+function setPendingLetter(char,reply,delayMin,imgSrc=null){
   const unlockAt=Date.now()+delayMin*60*1000;
-  pendingLetter={charId:char.id,charName:char.name,c1:char.c1,c2:char.c2,reply,unlockAt,delayMin};
+  pendingLetter={charId:char.id,charName:char.name,c1:char.c1,c2:char.c2,reply,unlockAt,delayMin,imgSrc};
   try{localStorage.setItem('hikari-pending',JSON.stringify(pendingLetter));}catch(e){}
   showPendingBanner(char,reply,unlockAt);
 }
@@ -1753,7 +1985,7 @@ function unlockPendingLetter(){
   document.getElementById('letterDate').textContent=formatDate(new Date());
   // 儲存到信箱
   const char=state.chars.find(c=>c.id===pendingLetter.charId);
-  if(char)saveToInbox(char,pendingLetter.reply,'（信件送達）','');
+  if(char)saveToInbox(char,pendingLetter.reply,'（信件送達）','',pendingLetter.imgSrc||null);
   try{localStorage.removeItem('hikari-pending');}catch(e){}
   pendingLetter=null;
 }
@@ -1870,7 +2102,7 @@ function setRelMode(m){relMode=m;relPendingFrom=null;['view','add','del'].forEac
 function checkBirthday(){const ts=String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0');const bc=state.chars.filter(c=>c.birthday===ts);const b=document.getElementById('birthdayBanner');if(bc.length){b.style.display='block';b.textContent=`🎂 今天是 ${bc.map(c=>c.name).join('、')} 的生日！`;}}
 
 // ── 頁面切換 ──
-function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelector(`[data-page="${id}"]`)?.classList.add('active');if(id==='gallery')renderGallery();if(id==='inbox'){renderInboxFilter();renderInbox();renderSentInbox();}if(id==='diary')renderMoodChart();if(id==='studio')renderStats();if(id==='relation'){initRelationCanvas();setTimeout(drawRelation,100);}if(id==='dream')renderDreams();}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelector(`[data-page="${id}"]`)?.classList.add('active');if(id==='gallery'){if(galleryTab==='grid')renderGallery();else renderGalleryBook();}if(id==='inbox'){renderInboxFilter();renderInbox();renderSentInbox();}if(id==='diary')renderMoodChart();if(id==='studio')renderStats();if(id==='relation'){initRelationCanvas();setTimeout(drawRelation,100);}if(id==='dream')renderDreams();}
 
 // ── 工具 ──
 function formatDate(d){return`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;}
