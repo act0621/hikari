@@ -344,6 +344,38 @@ body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--text-mai
 .inbox-detail-gaze{font-size:11px;color:rgba(160,148,136,.4);text-align:right;margin-top:.3rem;letter-spacing:.07em;}
 .inbox-detail-close{font-size:12px;color:var(--text-soft);cursor:pointer;letter-spacing:.1em;margin-top:1.5rem;display:inline-block;}
 
+/* ── 聊天室 ── */
+.chat-bubble-btn{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#a8edea,#fed6e3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:500;transition:all .3s ease;-webkit-tap-highlight-color:transparent;}
+.chat-bubble-btn:hover{transform:scale(1.08);}
+.chat-unread{position:absolute;top:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#f05060;border:2px solid var(--bg);font-size:9px;color:#fff;display:none;align-items:center;justify-content:center;}
+.chat-unread.show{display:flex;}
+.chat-panel{position:fixed;bottom:82px;right:24px;width:300px;height:420px;background:var(--paper);border:.5px solid var(--paper-border);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:499;display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transform:translateY(12px) scale(.97);transition:all .3s cubic-bezier(.34,1.56,.64,1);}
+.chat-panel.show{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+@media(max-width:600px){.chat-panel{width:calc(100vw - 32px);right:16px;bottom:72px;}.chat-bubble-btn{bottom:16px;right:16px;}}
+.chat-header{padding:.8rem 1rem;border-bottom:.5px solid var(--paper-border);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--paper);}
+.chat-header-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.chat-header-name{font-size:13px;color:var(--text-main);flex:1;}
+.chat-header-close{font-size:20px;color:var(--text-soft);cursor:pointer;line-height:1;padding:0 2px;}
+.chat-quota{font-size:10px;color:var(--text-soft);padding:.4rem 1rem;border-bottom:.5px solid var(--paper-border);letter-spacing:.06em;flex-shrink:0;}
+.chat-quota-bar{height:2px;background:rgba(160,148,136,.12);border-radius:1px;margin-top:.3rem;overflow:hidden;}
+.chat-quota-fill{height:100%;border-radius:1px;transition:width .4s ease;background:linear-gradient(90deg,#a8edea,#fed6e3);}
+.chat-messages{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;scrollbar-width:none;}
+.chat-messages::-webkit-scrollbar{display:none;}
+.chat-msg{max-width:82%;padding:.6rem .9rem;border-radius:14px;font-size:13px;line-height:1.7;animation:fadeUp .3s ease both;white-space:pre-wrap;}
+.chat-msg.mine{align-self:flex-end;background:rgba(168,237,234,.18);border:.5px solid rgba(168,237,234,.3);color:var(--text-main);border-bottom-right-radius:4px;}
+.chat-msg.theirs{align-self:flex-start;background:rgba(255,253,249,.8);border:.5px solid var(--paper-border);color:var(--text-main);border-bottom-left-radius:4px;}
+.chat-loading{display:inline-flex;gap:3px;align-items:center;}
+.chat-loading span{width:4px;height:4px;border-radius:50%;background:var(--text-soft);animation:bounce 1.2s ease infinite;}
+.chat-loading span:nth-child(2){animation-delay:.2s;}.chat-loading span:nth-child(3){animation-delay:.4s;}
+.chat-input-area{padding:.7rem .8rem;border-top:.5px solid var(--paper-border);display:flex;gap:6px;align-items:flex-end;flex-shrink:0;}
+.chat-input{flex:1;background:rgba(255,253,249,.6);border:.5px solid var(--paper-border);border-radius:10px;padding:7px 10px;font-family:'Noto Serif TC',serif;font-size:13px;color:var(--text-main);outline:none;resize:none;min-height:36px;max-height:80px;line-height:1.6;}
+.chat-input::placeholder{color:var(--text-soft);}
+.chat-input:focus{border-color:rgba(140,128,118,.4);}
+.chat-send{width:32px;height:32px;border-radius:50%;border:none;background:linear-gradient(135deg,#a8edea,#fed6e3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .2s ease;}
+.chat-send:hover{transform:scale(1.08);}
+.chat-send:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.chat-quota-warn{font-size:11px;color:rgba(200,80,80,.6);text-align:center;padding:.3rem 1rem;flex-shrink:0;}
+
 /* ── 創作室 ── */
 .timer-display{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:300;color:#5a5248;text-align:center;letter-spacing:.05em;margin:1rem 0 .5rem;}
 .timer-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:1.2rem;}
@@ -883,6 +915,37 @@ input[type=color]{width:32px;height:32px;border:.5px solid var(--paper-border);b
   </div>
 </div>
 
+<!-- 聊天室 -->
+<button class="chat-bubble-btn" onclick="toggleChat()" id="chatBubbleBtn">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 3C7 3 3 6.5 3 10.5C3 13 4.5 15.2 7 16.5L6 21L10.5 18.5C11 18.6 11.5 18.6 12 18.6C17 18.6 21 15.1 21 10.5C21 6.5 17 3 12 3Z" fill="rgba(255,255,255,0.9)" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+    <circle cx="8.5" cy="10.5" r="1.2" fill="rgba(90,154,148,0.7)"/>
+    <circle cx="12" cy="10.5" r="1.2" fill="rgba(90,154,148,0.7)"/>
+    <circle cx="15.5" cy="10.5" r="1.2" fill="rgba(90,154,148,0.7)"/>
+  </svg>
+  <div class="chat-unread" id="chatUnread"></div>
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-header-avatar" id="chatHeaderAvatar">🌙</div>
+    <div class="chat-header-name" id="chatHeaderName">選擇角色後開始聊天</div>
+    <div class="chat-header-close" onclick="toggleChat()">×</div>
+  </div>
+  <div class="chat-quota" id="chatQuotaArea">
+    今日剩餘字數：<span id="chatQuotaNum">100</span> / 100
+    <div class="chat-quota-bar"><div class="chat-quota-fill" id="chatQuotaFill" style="width:100%"></div></div>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg theirs" style="font-size:12px;color:var(--text-soft)">選擇一個角色，今天有什麼想說的嗎？</div>
+  </div>
+  <div class="chat-quota-warn" id="chatWarn" style="display:none">今天的話說完了，明天再來吧。</div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chatInput" placeholder="說點什麼……" rows="1" onkeydown="handleChatKey(event)" oninput="updateChatCounter()"></textarea>
+    <button class="chat-send" id="chatSendBtn" onclick="sendChat()">→</button>
+  </div>
+</div>
+
 <!-- 角色 Modal -->
 <div class="modal-overlay" id="charModal" onclick="closeCharModal()">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -970,7 +1033,7 @@ function init(){
   checkBirthday();checkLonging();buildNeonPresets();buildEmojiPicker();loadSettingsUI();
   renderWishes();renderQuotes();renderQuoteCharSel();renderInspo();renderDreams();
   updateWorldState();updateTimerStats();setTodayQuote();refreshDrift();renderStats();renderInboxSlider();
-  setTimeout(initRelationCanvas,300);
+  setTimeout(initRelationCanvas,300);loadPendingLetter();
   setInterval(updateWorldState,30*60*1000);setInterval(checkLonging,60*60*1000);
 }
 
@@ -1047,7 +1110,139 @@ function getApiKey(){return document.getElementById('settingApiKey').value.trim(
 function getUserContext(){const n=document.getElementById('settingName').value.trim(),h=document.getElementById('settingHobbies').value.trim(),a=document.getElementById('settingAbout').value.trim();let c='';if(n)c+=`對方名字是${n}。`;if(h)c+=`興趣：${h}。`;if(a)c+=`關於她：${a}。`;return c;}
 function getCurrentChar(){return state.chars.find(c=>c.id===state.currentCharId);}
 
-// ── 主題切換 ──
+// ══════════════════════════════════════════
+// 聊天室系統
+// ══════════════════════════════════════════
+const CHAT_DAILY_LIMIT=100;
+let chatOpen=false;
+
+function getChatState(){
+  const today=new Date().toISOString().split('T')[0];
+  try{
+    const s=JSON.parse(localStorage.getItem('hikari-chat')||'{}');
+    if(s.date!==today)return{date:today,used:0,history:[]};
+    return s;
+  }catch(e){return{date:today,used:0,history:[]};}
+}
+function saveChatState(cs){try{localStorage.setItem('hikari-chat',JSON.stringify(cs));}catch(e){}}
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chatPanel').classList.toggle('show',chatOpen);
+  if(chatOpen){
+    updateChatHeader();
+    renderChatHistory();
+    updateChatQuota();
+    document.getElementById('chatUnread').classList.remove('show');
+    setTimeout(()=>document.getElementById('chatInput')?.focus(),300);
+  }
+}
+
+function updateChatHeader(){
+  const char=getCurrentChar();if(!char)return;
+  const avatar=document.getElementById('chatHeaderAvatar');
+  const name=document.getElementById('chatHeaderName');
+  if(char.avatarImg)avatar.innerHTML=`<img src="${char.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+  else avatar.textContent=char.emoji;
+  name.textContent=char.name;
+  // 更新氣泡按鈕顏色
+  document.getElementById('chatBubbleBtn').style.background=`linear-gradient(135deg,${char.c1},${char.c2})`;
+}
+
+function updateChatQuota(){
+  const cs=getChatState();
+  const remaining=Math.max(0,CHAT_DAILY_LIMIT-cs.used);
+  document.getElementById('chatQuotaNum').textContent=remaining;
+  const pct=Math.max(0,(remaining/CHAT_DAILY_LIMIT)*100);
+  const fill=document.getElementById('chatQuotaFill');
+  const char=getCurrentChar();
+  fill.style.width=pct+'%';
+  if(char)fill.style.background=`linear-gradient(90deg,${char.c1},${char.c2})`;
+  const warn=document.getElementById('chatWarn');
+  const input=document.getElementById('chatInput');
+  const btn=document.getElementById('chatSendBtn');
+  // 已用完（且最後一句寬容已用）
+  const exhausted=cs.used>=CHAT_DAILY_LIMIT&&cs.lastSentOver;
+  warn.style.display=exhausted?'block':'none';
+  if(input)input.disabled=exhausted;
+  if(btn)btn.disabled=exhausted;
+}
+
+function updateChatCounter(){
+  const cs=getChatState();
+  const input=document.getElementById('chatInput');
+  if(!input)return;
+  const remaining=Math.max(0,CHAT_DAILY_LIMIT-cs.used);
+  // 如果剩餘 = 0 但還沒用過「最後一句寬容」，還是可以打
+  if(cs.used>=CHAT_DAILY_LIMIT&&cs.lastSentOver){input.disabled=true;}
+}
+
+function handleChatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+
+function renderChatHistory(){
+  const cs=getChatState();
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML='';
+  if(!cs.history.length){msgs.innerHTML='<div class="chat-msg theirs" style="font-size:12px;color:var(--text-soft)">今天有什麼想說的嗎？</div>';return;}
+  cs.history.forEach(m=>{
+    const div=document.createElement('div');div.className='chat-msg '+(m.role==='user'?'mine':'theirs');
+    div.textContent=m.text;msgs.appendChild(div);
+  });
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const text=input?.value.trim();if(!text)return;
+  const char=getCurrentChar();if(!char){alert('請先選擇角色');return;}
+  const cs=getChatState();
+
+  // 字數檢查：如果已超過100字且已用過寬容，擋住
+  if(cs.used>=CHAT_DAILY_LIMIT&&cs.lastSentOver)return;
+
+  const charCount=text.length;
+  const willExceed=cs.used+charCount>CHAT_DAILY_LIMIT;
+
+  // 加入我的訊息
+  cs.history.push({role:'user',text});
+  cs.used+=charCount;
+  if(willExceed)cs.lastSentOver=true;// 標記已用寬容
+  saveChatState(cs);
+
+  input.value='';
+  renderChatHistory();
+  updateChatQuota();
+
+  // 顯示 loading
+  const msgs=document.getElementById('chatMessages');
+  const loadingDiv=document.createElement('div');loadingDiv.className='chat-msg theirs';
+  loadingDiv.innerHTML='<span class="chat-loading"><span></span><span></span><span></span></span>';
+  msgs.appendChild(loadingDiv);msgs.scrollTop=msgs.scrollHeight;
+
+  const apiKey=getApiKey();
+  let reply='……';
+  if(apiKey){
+    try{
+      // 聊天室用更簡短的回覆指令（50-100字）
+      const system=buildSystemPrompt(char,'這是即時聊天，請用簡短自然的方式回覆，50~100字，像傳訊息一樣，不用像信件那麼正式。');
+      // 傳入最近5則對話歷史
+      const recentHistory=cs.history.slice(-5).map(m=>({role:m.role==='user'?'user':'assistant',content:m.text}));
+      reply=await callAPI(apiKey,system,recentHistory,200)||reply;
+    }catch(e){reply='……（網路不穩，等一下再說？）';}
+  }else{reply='請先在設定裡填入 API 金鑰。';}
+
+  // 替換 loading
+  loadingDiv.textContent=reply;
+  cs.history.push({role:'char',text:reply});
+  saveChatState(cs);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  // 如果視窗是關閉的，顯示未讀紅點
+  if(!chatOpen)document.getElementById('chatUnread').classList.add('show');
+
+  // 好感值小幅提升
+  gainAffection(2+Math.floor(Math.random()*3));
+}
 function setTheme(theme){
   document.body.classList.remove('theme-dark','theme-light');
   if(theme==='dark')document.body.classList.add('theme-dark');
@@ -1143,7 +1338,7 @@ function showWhisper(id){
   const el=document.getElementById('wt_'+id),ov=document.getElementById('wo_'+id);
   if(!el||!ov)return;el.textContent=txt;ov.classList.add('show');setTimeout(()=>ov.classList.remove('show'),2400);
 }
-function selectChar(id){state.currentCharId=id;saveState();renderChars();applyCharTheme();updateAffBar();updateWorldState();checkLonging();refreshDrift();drawRelation();}
+function selectChar(id){state.currentCharId=id;saveState();renderChars();applyCharTheme();updateAffBar();updateWorldState();checkLonging();refreshDrift();drawRelation();if(chatOpen)updateChatHeader();}
 
 function applyCharTheme(){
   const char=getCurrentChar();if(!char)return;
@@ -1484,13 +1679,20 @@ function updateTimerStats(){document.getElementById('statToday').textContent=(st
 // ══════════════════════════════════════════
 
 // 城市資料庫（隨機生成角色所在地）
+// dist 欄位改為實際從台灣出發的飛行時間（分鐘）
 const CITIES=[
-  {name:'京都',dist:2100},{name:'首爾',dist:1960},{name:'東京',dist:2160},
-  {name:'上海',dist:690},{name:'香港',dist:811},{name:'大阪',dist:2060},
-  {name:'北京',dist:2073},{name:'倫敦',dist:9700},{name:'巴黎',dist:10200},
-  {name:'紐約',dist:12900},{name:'洛杉磯',dist:11200},{name:'雪梨',dist:7400},
-  {name:'新加坡',dist:3310},{name:'曼谷',dist:2685},{name:'維也納',dist:9600},
+  {name:'上海',dist:120},{name:'香港',dist:105},{name:'首爾',dist:150},
+  {name:'東京',dist:180},{name:'大阪',dist:165},{name:'京都',dist:165},
+  {name:'北京',dist:210},{name:'新加坡',dist:300},{name:'曼谷',dist:240},
+  {name:'雪梨',dist:540},{name:'倫敦',dist:840},{name:'愛丁堡',dist:855},
+  {name:'巴黎',dist:840},{name:'維也納',dist:840},{name:'紐約',dist:960},
+  {name:'洛杉磯',dist:720},
 ];
+
+// 根據飛行時間直接對應等待時間（dist 現在就是分鐘）
+function calcDelay(dist){
+  return dist;// 直接用飛行時間當等待時間
+}
 
 // 每個角色在不同城市（根據角色 id 固定分配）
 function getCharCity(char){
@@ -1501,13 +1703,6 @@ function getCharCity(char){
     saveState();
   }
   return state.charCities[char.id];
-}
-
-// 根據距離計算延遲時間（分鐘）
-function calcDelay(dist){
-  // 500km → 10分鐘，10000km → 120分鐘，線性插值
-  const min=Math.round(10+(dist/10000)*110);
-  return Math.min(min,180);// 最長180分鐘
 }
 
 // 待解鎖信件
@@ -1536,9 +1731,14 @@ function showPendingBanner(char,reply,unlockAt){
 function updatePendingCountdown(unlockAt){
   const remaining=unlockAt-Date.now();
   if(remaining<=0){clearInterval(pendingTimer);unlockPendingLetter();return;}
-  const m=Math.floor(remaining/60000),s=Math.floor((remaining%60000)/1000);
+  const totalMin=Math.floor(remaining/60000);
+  const h=Math.floor(totalMin/60),m=totalMin%60,s=Math.floor((remaining%60000)/1000);
+  let timeStr='';
+  if(h>0)timeStr=`${h} 小時 ${m} 分`;
+  else if(m>0)timeStr=`${m} 分 ${s} 秒`;
+  else timeStr=`${s} 秒`;
   const el=document.getElementById('letterPendingCountdown');
-  if(el)el.textContent=`預計 ${m} 分 ${s} 秒後送達……`;
+  if(el)el.textContent=`預計 ${timeStr} 後送達……`;
 }
 
 function unlockPendingLetter(){
